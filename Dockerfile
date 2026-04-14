@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -10,6 +10,6 @@ COPY . .
 EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:' + __import__('os').environ.get('PORT','8080') + '/health')" || exit 1
+    CMD python3 -c "import urllib.request, os; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT','8080') + '/health')" || exit 1
 
 CMD ["python", "main.py"]
