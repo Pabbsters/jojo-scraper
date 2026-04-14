@@ -2,20 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
-
-def _int_env(name: str, default: int) -> int:
-    """Read an integer env var, falling back to *default* on bad input."""
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    try:
-        return int(raw)
-    except ValueError:
-        return default
-
-
 # ── Track priority (index = priority, lower = higher) ──────────────────
 TRACK_PRIORITY: list[str] = [
     "ai_data",
@@ -122,7 +108,7 @@ GITHUB_REPOS: list[str] = [
     "speedyapply/2026-AI-College-Jobs",
 ]
 
-# ── Intern title regex patterns ────────────────────────────────────────
+# ── Intern / entry-level title patterns (must match one) ──────────────
 INTERN_TITLE_PATTERNS: list[str] = [
     r"\bintern\b",
     r"\binternship\b",
@@ -131,20 +117,31 @@ INTERN_TITLE_PATTERNS: list[str] = [
     r"\bfellow\b",
     r"\bresidency\b",
     r"\bapprentice\b",
+    r"\bnew grad\b",
+    r"\bnew-grad\b",
+    r"\bentry[- ]level\b",
+    r"\bearly career\b",
+    r"\bcampus hire\b",
+    r"\buniversity hire\b",
+    r"\brecent graduate\b",
 ]
 
-# ── Polling intervals (minutes) ────────────────────────────────────────
-# JobSpy is slightly slower by default because LinkedIn/Glassdoor scraping
-# is the most likely source to trigger anti-bot defenses.
-POLL_INTERVAL_MINUTES: dict[str, int] = {
-    "greenhouse": _int_env("POLL_GREENHOUSE_MINUTES", 15),
-    "ashby": _int_env("POLL_ASHBY_MINUTES", 15),
-    "lever": _int_env("POLL_LEVER_MINUTES", 15),
-    "github": _int_env("POLL_GITHUB_MINUTES", 15),
-    "jobspy": _int_env("POLL_JOBSPY_MINUTES", 45),
-    "amazon": _int_env("POLL_AMAZON_MINUTES", 30),
-    "apple": _int_env("POLL_APPLE_MINUTES", 30),
-    "reddit": _int_env("POLL_REDDIT_MINUTES", 60),
-    "workday": _int_env("POLL_WORKDAY_MINUTES", 60),
-    "hn": _int_env("POLL_HN_MINUTES", 1440),
-}
+# ── Title/description patterns that disqualify a posting ──────────────
+# These are roles above bachelor's level or requiring advanced degrees.
+EXCLUDE_PATTERNS: list[str] = [
+    r"\bphd\b",
+    r"\bph\.d\b",
+    r"\bdoctoral\b",
+    r"\bpostdoc\b",
+    r"\bpost-doc\b",
+    r"\bsenior\b",
+    r"\bstaff engineer\b",
+    r"\bprincipal engineer\b",
+    r"\bdirector\b",
+    r"\bvp of\b",
+    r"\bhead of\b",
+    r"\blead engineer\b",
+    r"\bmanager\b",
+    r"\b[5-9]\+\s*years\b",
+    r"\b[1-9][0-9]\+\s*years\b",
+]
