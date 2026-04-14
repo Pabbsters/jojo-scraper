@@ -16,9 +16,9 @@ SEARCH_QUERIES: list[str] = [
     "quant intern",
 ]
 
-# Glassdoor requires Playwright — excluded for container compatibility.
-# LinkedIn uses linkedin_fetch_description=False so no Playwright needed.
-SITES: list[str] = ["indeed", "linkedin", "google", "zip_recruiter"]
+# Playwright/Chromium is installed in the container so JobSpy can use
+# LinkedIn and Glassdoor reliably in deployment.
+SITES: list[str] = ["indeed", "linkedin", "glassdoor", "google", "zip_recruiter"]
 
 
 def _normalize_row(row: dict) -> dict:

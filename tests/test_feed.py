@@ -143,11 +143,16 @@ class TestNotFound:
 class TestStartFeedServer:
     """Test server startup."""
 
-    def test_starts_and_returns_server(self) -> None:
+    @patch("feed.threading.Thread")
+    @patch("feed.HTTPServer")
+    def test_starts_and_returns_server(self, mock_http_server: MagicMock, mock_thread: MagicMock) -> None:
         mock_db = MagicMock()
+        mock_server = MagicMock(spec=HTTPServer)
+        mock_http_server.return_value = mock_server
+
         server = start_feed_server(mock_db, port=0)  # port 0 = OS picks
-        try:
-            assert isinstance(server, HTTPServer)
-            assert FeedHandler.db is mock_db
-        finally:
-            server.shutdown()
+        assert server is mock_server
+        assert FeedHandler.db is mock_db
+        mock_http_server.assert_called_once_with(("0.0.0.0", 0), FeedHandler)
+        mock_thread.assert_called_once_with(target=mock_server.serve_forever, daemon=True)
+        mock_thread.return_value.start.assert_called_once()

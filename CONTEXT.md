@@ -11,7 +11,7 @@ This is the standalone deploy repo for the jojo internship scraper. It is a copy
 | Health | `GET http://178.104.137.52/health` |
 | Feed | `GET http://178.104.137.52/feed?since=<unix_ts>` |
 | Provider | Hetzner (via ComputeEdge MCP) |
-| Deployment ID | `ce-hetzner-68032ff5` |
+| Deployment ID | `ce-hetzner-dbe06520` |
 | Cost | $3.49/mo |
 
 ## Repos
@@ -43,15 +43,17 @@ feed.py          — HTTP server for /feed and /health
 sources/         — one poller per job board
 ```
 
-## Remaining Tasks (as of 2026-04-14)
+## Current Status (verified 2026-04-14)
 
-- [ ] Confirm 502 is resolved and `/health` returns `{"status": "ok"}`
-- [ ] Verify Discord alert fires for a real posting
+- [x] 502 resolved and `/health` returns `{"status": "ok"}`
+- [x] `/feed` returns live JSON postings from the deployed service
+- [ ] Verify Discord alert fires for a real posting in the target channel
 - [ ] Wire `SCRAPER_FEED_URL=http://178.104.137.52` into NanoClaw tasks (see `nanoclaw/scraper/nanoclaw-tasks/`)
-- [ ] Task 16: Daily AI enrichment NanoClaw task (12 PM + 6 PM CST)
-- [ ] Task 17: Weekly newsletter NanoClaw task (Sunday 3 PM CST)
-- [ ] Task 18: Weekly knowledge base update NanoClaw task (Saturday 2 AM CST)
-- [ ] Task 19: Integration tests pass end-to-end
+- [x] Task 16: Daily AI enrichment NanoClaw task registered
+- [x] Task 17: Weekly newsletter NanoClaw task registered
+- [x] Task 18: Weekly knowledge base update NanoClaw task registered
+- [ ] Task 19: Extended end-to-end checks outside local pytest remain to be confirmed
+- [ ] Task 20: Final config/docs pass
 
 ## Deployment (via ComputeEdge MCP in Claude Code)
 
@@ -69,7 +71,7 @@ mcp__computeedge__deploy(
 )
 
 # Monitor
-mcp__computeedge__monitor(deployment_id="ce-hetzner-68032ff5")
+mcp__computeedge__monitor(deployment_id="ce-hetzner-dbe06520")
 ```
 
 ## Full Plan

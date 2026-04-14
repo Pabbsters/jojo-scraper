@@ -8,6 +8,7 @@ import os
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from config import POLL_INTERVAL_MINUTES
 from db import PostingDB
 from discord_alert import send_alert
 from feed import start_feed_server
@@ -137,22 +138,82 @@ async def _async_main() -> None:
     scheduler = AsyncIOScheduler()
 
     # Tier 1: Direct APIs - every 15 min
-    scheduler.add_job(poll_greenhouse, "interval", minutes=15, id="greenhouse", next_run_time=None)
-    scheduler.add_job(poll_ashby, "interval", minutes=15, id="ashby", next_run_time=None)
-    scheduler.add_job(poll_lever, "interval", minutes=15, id="lever", next_run_time=None)
-    scheduler.add_job(poll_github, "interval", minutes=15, id="github", next_run_time=None)
+    scheduler.add_job(
+        poll_greenhouse,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["greenhouse"],
+        id="greenhouse",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_ashby,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["ashby"],
+        id="ashby",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_lever,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["lever"],
+        id="lever",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_github,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["github"],
+        id="github",
+        next_run_time=None,
+    )
 
-    # Tier 2: Aggregators - every 30 min
-    scheduler.add_job(poll_jobspy_wrapper, "interval", minutes=30, id="jobspy", next_run_time=None)
-    scheduler.add_job(poll_amazon_jobs, "interval", minutes=30, id="amazon", next_run_time=None)
-    scheduler.add_job(poll_apple_jobs, "interval", minutes=30, id="apple", next_run_time=None)
+    # Tier 2: Aggregators - JobSpy runs slightly slower for stability.
+    scheduler.add_job(
+        poll_jobspy_wrapper,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["jobspy"],
+        id="jobspy",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_amazon_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["amazon"],
+        id="amazon",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_apple_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["apple"],
+        id="apple",
+        next_run_time=None,
+    )
 
     # Tier 3: Community - every 60 min
-    scheduler.add_job(poll_reddit_feeds, "interval", minutes=60, id="reddit", next_run_time=None)
-    scheduler.add_job(poll_workday_feeds, "interval", minutes=60, id="workday", next_run_time=None)
+    scheduler.add_job(
+        poll_reddit_feeds,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["reddit"],
+        id="reddit",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_workday_feeds,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["workday"],
+        id="workday",
+        next_run_time=None,
+    )
 
     # Tier 4: Daily
-    scheduler.add_job(poll_hn_feeds, "interval", minutes=1440, id="hn", next_run_time=None)
+    scheduler.add_job(
+        poll_hn_feeds,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["hn"],
+        id="hn",
+        next_run_time=None,
+    )
 
     scheduler.start()
     logger.info("Scheduler started -- all sources armed")
