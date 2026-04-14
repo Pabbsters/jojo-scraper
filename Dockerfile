@@ -1,22 +1,15 @@
-FROM python:3.12-slim
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
 
 WORKDIR /app
 
-# System deps for Playwright (Chromium)
-RUN apt-get update && apt-get install -y \
-    wget gnupg ca-certificates \
-    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
-    libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libgbm1 libxkbcommon0 libpango-1.0-0 libcairo2 \
-    libasound2 libatspi2.0-0 libx11-6 libxext6 \
-    --no-install-recommends && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN playwright install chromium
 
 COPY . .
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:' + __import__('os').environ.get('PORT','8080') + '/health')" || exit 1
 
 CMD ["python", "main.py"]
