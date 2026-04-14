@@ -2,6 +2,19 @@
 
 from __future__ import annotations
 
+import os
+
+
+def _int_env(name: str, default: int) -> int:
+    """Read an integer env var and fall back to *default* if unset/invalid."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
 # ── Track priority (index = priority, lower = higher) ──────────────────
 TRACK_PRIORITY: list[str] = [
     "ai_data",
@@ -145,3 +158,19 @@ EXCLUDE_PATTERNS: list[str] = [
     r"\b[5-9]\+\s*years\b",
     r"\b[1-9][0-9]\+\s*years\b",
 ]
+
+# ── Polling intervals (minutes) ────────────────────────────────────────
+# JobSpy runs a bit slower by default because LinkedIn/Glassdoor are the
+# most likely sources to hit anti-bot/rate-limit issues.
+POLL_INTERVAL_MINUTES: dict[str, int] = {
+    "greenhouse": _int_env("POLL_GREENHOUSE_MINUTES", 15),
+    "ashby": _int_env("POLL_ASHBY_MINUTES", 15),
+    "lever": _int_env("POLL_LEVER_MINUTES", 15),
+    "github": _int_env("POLL_GITHUB_MINUTES", 15),
+    "jobspy": _int_env("POLL_JOBSPY_MINUTES", 45),
+    "amazon": _int_env("POLL_AMAZON_MINUTES", 30),
+    "apple": _int_env("POLL_APPLE_MINUTES", 30),
+    "reddit": _int_env("POLL_REDDIT_MINUTES", 60),
+    "workday": _int_env("POLL_WORKDAY_MINUTES", 60),
+    "hn": _int_env("POLL_HN_MINUTES", 1440),
+}
