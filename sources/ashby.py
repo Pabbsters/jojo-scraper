@@ -46,6 +46,7 @@ def parse_ashby_jobs(
         skills = description[:200].strip() if description else ""
 
         posting_url = job.get("hostedUrl", "") or job.get("jobUrl", "")
+        posted_at = str(job.get("publishedAt", "")).strip()
 
         results.append({
             "posting_id": str(job.get("id", "")),
@@ -56,6 +57,7 @@ def parse_ashby_jobs(
             "team": team,
             "skills": skills,
             "location": location if isinstance(location, str) else "",
+            "posted_at": posted_at,
         })
 
     return results

@@ -15,6 +15,8 @@ MOCK_GREENHOUSE_RESPONSE: dict = {
             "id": 101,
             "title": "Software Engineering Intern",
             "absolute_url": "https://boards.greenhouse.io/acme/jobs/101",
+            "first_published": "2026-03-10T09:30:00-05:00",
+            "updated_at": "2026-03-11T10:45:00-05:00",
             "content": "<p>Python, Java, distributed systems experience preferred.</p>",
             "departments": [{"name": "Engineering"}],
             "location": {"name": "New York, NY"},
@@ -102,6 +104,7 @@ class TestParseGreenhouseJobs:
         assert intern["company_name"] == "Acme Inc"
         assert intern["team"] == "Engineering"
         assert intern["location"] == "New York, NY"
+        assert intern["posted_at"] == "2026-03-10T09:30:00-05:00"
 
     def test_skills_from_content(self) -> None:
         results = parse_greenhouse_jobs("acme", "Acme Inc", MOCK_GREENHOUSE_RESPONSE)
@@ -135,3 +138,20 @@ class TestParseGreenhouseJobs:
     def test_missing_jobs_key(self) -> None:
         results = parse_greenhouse_jobs("acme", "Acme Inc", {})
         assert results == []
+
+    def test_falls_back_to_updated_at_when_first_published_missing(self) -> None:
+        raw = {
+            "jobs": [
+                {
+                    "id": 105,
+                    "title": "Security Intern",
+                    "absolute_url": "https://boards.greenhouse.io/acme/jobs/105",
+                    "updated_at": "2026-04-15T12:00:00-05:00",
+                    "content": "<p>Linux, networking.</p>",
+                    "departments": [{"name": "Security"}],
+                    "location": {"name": "Remote"},
+                }
+            ]
+        }
+        results = parse_greenhouse_jobs("acme", "Acme Inc", raw)
+        assert results[0]["posted_at"] == "2026-04-15T12:00:00-05:00"

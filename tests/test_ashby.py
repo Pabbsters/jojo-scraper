@@ -16,6 +16,7 @@ MOCK_ASHBY_DICT_RESPONSE: dict = {
             "title": "ML Engineering Intern",
             "departmentName": "Research",
             "location": "San Francisco, CA",
+            "publishedAt": "2026-03-19T20:59:28.241+00:00",
             "descriptionPlain": "PyTorch, transformers, RLHF experience.",
             "hostedUrl": "https://jobs.ashbyhq.com/anthropic/abc-001",
         },
@@ -44,6 +45,7 @@ MOCK_ASHBY_LIST_RESPONSE: list = [
         "title": "Data Science Internship",
         "team": "Analytics",
         "location": "NYC",
+        "publishedAt": "2026-04-01T15:10:00.000+00:00",
         "description": "SQL, Python, dashboards.",
         "jobUrl": "https://jobs.ashbyhq.com/openai/xyz-001",
     },
@@ -81,6 +83,7 @@ class TestParseAshbyJobsDictFormat:
         assert intern["company_slug"] == "anthropic"
         assert intern["company_name"] == "Anthropic"
         assert intern["team"] == "Research"
+        assert intern["posted_at"] == "2026-03-19T20:59:28.241+00:00"
 
     def test_skills_from_description(self) -> None:
         results = parse_ashby_jobs("anthropic", "Anthropic", MOCK_ASHBY_DICT_RESPONSE)
@@ -122,6 +125,10 @@ class TestParseAshbyJobsListFormat:
     def test_falls_back_to_jobUrl(self) -> None:
         results = parse_ashby_jobs("openai", "OpenAI", MOCK_ASHBY_LIST_RESPONSE)
         assert results[0]["url"] == "https://jobs.ashbyhq.com/openai/xyz-001"
+
+    def test_preserves_published_at(self) -> None:
+        results = parse_ashby_jobs("openai", "OpenAI", MOCK_ASHBY_LIST_RESPONSE)
+        assert results[0]["posted_at"] == "2026-04-01T15:10:00.000+00:00"
 
 
 class TestParseAshbyJobsEdgeCases:

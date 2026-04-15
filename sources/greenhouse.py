@@ -40,6 +40,7 @@ def parse_greenhouse_jobs(
 
         location_obj = job.get("location", {})
         location = location_obj.get("name", "") if location_obj else ""
+        posted_at = str(job.get("first_published", "") or job.get("updated_at", "")).strip()
 
         results.append({
             "posting_id": str(job.get("id", "")),
@@ -50,6 +51,7 @@ def parse_greenhouse_jobs(
             "team": team,
             "skills": skills,
             "location": location,
+            "posted_at": posted_at,
         })
 
     return results
