@@ -77,6 +77,53 @@ TRACK_KEYWORDS: dict[str, list[str]] = {
     ],
 }
 
+# ── Tier 1 curated company list ────────────────────────────────────────
+TIER1_COMPANIES: list[dict[str, str]] = [
+    {"slug": "amazon", "name": "Amazon"},
+    {"slug": "microsoft", "name": "Microsoft"},
+    {"slug": "google", "name": "Google"},
+    {"slug": "apple", "name": "Apple"},
+    {"slug": "meta", "name": "Meta"},
+    {"slug": "nvidia", "name": "NVIDIA"},
+    {"slug": "databricks", "name": "Databricks"},
+    {"slug": "palantir", "name": "Palantir"},
+    {"slug": "cloudflare", "name": "Cloudflare"},
+    {"slug": "datadog", "name": "Datadog"},
+    {"slug": "shopify", "name": "Shopify"},
+    {"slug": "openai", "name": "OpenAI"},
+    {"slug": "anthropic", "name": "Anthropic"},
+    {"slug": "cohere", "name": "Cohere"},
+    {"slug": "stripe", "name": "Stripe"},
+    {"slug": "ramp", "name": "Ramp"},
+    {"slug": "capitalone", "name": "Capital One"},
+    {"slug": "jpmorganchase", "name": "JPMorgan Chase"},
+    {"slug": "goldmansachs", "name": "Goldman Sachs"},
+    {"slug": "janestreet", "name": "Jane Street"},
+    {"slug": "citadel", "name": "Citadel"},
+    {"slug": "twosigma", "name": "Two Sigma"},
+    {"slug": "deshaw", "name": "D.E. Shaw"},
+    {"slug": "netflix", "name": "Netflix"},
+    {"slug": "spacex", "name": "SpaceX"},
+]
+
+# ── Tier 1 source preferences ─────────────────────────────────────────
+# Keep these companies pinned to their company-controlled source first.
+TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
+    "openai": {"preferred_source": "ashby", "source_type": "direct"},
+    "anthropic": {"preferred_source": "ashby", "source_type": "direct"},
+    "cohere": {"preferred_source": "ashby", "source_type": "direct"},
+    "databricks": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "palantir": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "cloudflare": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "datadog": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "citadel": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "janestreet": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "twosigma": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "deshaw": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "netflix": {"preferred_source": "lever", "source_type": "direct"},
+    "spacex": {"preferred_source": "lever", "source_type": "direct"},
+}
+
 # ── Company board sources ──────────────────────────────────────────────
 GREENHOUSE_COMPANIES: list[dict[str, str]] = [
     {"slug": "citadel", "name": "Citadel"},
@@ -134,14 +181,25 @@ INTERN_TITLE_PATTERNS: list[str] = [
     r"\bnew-grad\b",
     r"\bentry[- ]level\b",
     r"\bearly career\b",
+    r"\bearly-career\b",
     r"\bcampus hire\b",
     r"\buniversity hire\b",
     r"\brecent graduate\b",
 ]
 
+# ── Product vocabulary retained for future seasonal/contract support ───
+SEASONAL_CONTRACT_TITLE_TERMS: list[str] = [
+    r"\bseasonal\b",
+    r"\bcontract\b",
+    r"\btemporary\b",
+]
+
 # ── Title/description patterns that disqualify a posting ──────────────
 # These are roles above bachelor's level or requiring advanced degrees.
 EXCLUDE_PATTERNS: list[str] = [
+    r"\bco[- ]?op\b",
+    r"\bcoop\b",
+    r"\bcooperative education\b",
     r"\bphd\b",
     r"\bph\.d\b",
     r"\bdoctoral\b",

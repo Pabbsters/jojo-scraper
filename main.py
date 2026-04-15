@@ -8,8 +8,8 @@ import os
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config import POLL_INTERVAL_MINUTES
-from db import PostingDB
+from config import POLL_INTERVAL_MINUTES, TIER1_COMPANIES, TIER1_SOURCE_PREFERENCES
+from db import PostingDB, _canonical_identity_for_posting
 from discord_alert import send_alert
 from feed import start_feed_server
 from matching import classify_posting
@@ -33,42 +33,88 @@ logging.basicConfig(
 logger = logging.getLogger("jojo")
 
 db = PostingDB(os.environ.get("DB_PATH", "postings.db"))
+_TIER1_COMPANY_SLUGS = {company["slug"] for company in TIER1_COMPANIES}
+
+
+def _get_tier1_source_preference(company_slug: str) -> dict[str, str] | None:
+    """Return the preferred source config for a tier-1 company, if any."""
+    return TIER1_SOURCE_PREFERENCES.get(company_slug)
+
+
+def _get_company_tier(company_slug: str) -> str:
+    """Return the tier label for a company slug."""
+    return "tier_1" if company_slug in _TIER1_COMPANY_SLUGS else ""
 
 
 async def process_postings(postings: list[dict], source: str) -> None:
     """Check each posting against DB, classify, store, and alert."""
     new_count = 0
     for p in postings:
+        posting = dict(p)
         posting_id = str(p.get("posting_id", ""))
-        company_slug = p.get("company_slug", "unknown")
-        if not posting_id or not db.is_new(source, company_slug, posting_id):
+        company_slug = str(p.get("company_slug", "unknown")).strip()
+        preferred_source = _get_tier1_source_preference(company_slug)
+        tier = _get_company_tier(company_slug)
+        canonical_source, canonical_posting_id = _canonical_identity_for_posting(
+            source,
+            company_slug,
+            posting_id,
+            str(p.get("url", "")),
+        )
+        if not canonical_posting_id:
             continue
+
+        canonical_is_new = db.is_new(canonical_source, company_slug, canonical_posting_id)
 
         match = classify_posting(p.get("title", ""), p.get("description", ""))
         if match is None:
             continue
 
-        p["track"] = match["track"]
+        posting["track"] = match["track"]
+        posting["tier"] = tier
+        posting["matched_keyword"] = match.get("matched_keyword", "")
+        posting["key_skills"] = str(
+            posting.get("key_skills") or posting.get("skills", "")
+        ).strip()
+        if p.get("posted_at"):
+            posting["posted_at"] = str(p.get("posted_at"))
+        posting["source_type"] = (
+            "direct"
+            if preferred_source is not None and source == canonical_source
+            else ("fallback" if preferred_source is not None else "")
+        )
+        posting["canonical_source"] = canonical_source
+        posting["canonical_posting_id"] = canonical_posting_id
         db.mark_seen(
             source=source,
             company_slug=company_slug,
             posting_id=posting_id,
-            title=p.get("title", ""),
-            url=p.get("url", ""),
+            title=posting.get("title", ""),
+            url=posting.get("url", ""),
             track=match["track"],
-            company_name=p.get("company_name", ""),
-            skills=p.get("skills", ""),
-            comp=p.get("comp", ""),
-            team=p.get("team", ""),
-            deadline=p.get("deadline", ""),
+            company_name=posting.get("company_name", ""),
+            skills=posting.get("skills", ""),
+            comp=posting.get("comp", ""),
+            team=posting.get("team", ""),
+            deadline=posting.get("deadline", ""),
+            tier=tier,
+            source_type=posting["source_type"],
+            matched_keyword=posting["matched_keyword"],
+            key_skills=posting["key_skills"],
+            posted_at=posting.get("posted_at", ""),
+            canonical_source=canonical_source,
+            canonical_posting_id=canonical_posting_id,
         )
 
-        try:
-            await send_alert(p)
-        except Exception as e:
-            logger.error("Failed to send alert: %s", e)
+        if canonical_is_new:
+            stored_row = db.get_recent(limit=1)[0]
+            posting["first_seen_at"] = stored_row.get("first_seen_at", 0)
+            try:
+                await send_alert(posting)
+            except Exception as e:
+                logger.error("Failed to send alert: %s", e)
 
-        new_count += 1
+            new_count += 1
 
     if new_count > 0:
         logger.info("[%s] %d new postings found and alerted", source, new_count)

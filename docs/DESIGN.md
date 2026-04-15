@@ -1,188 +1,224 @@
-# Jojo Internship Alerts & Newsletter System — Design Spec
+# Jojo Alerts V1 Design
 
-**Author**: Ruthwik Pabbu
-**Date**: 2026-04-12
-**Status**: Approved
+**Status:** Active source of truth for v1
+**Last updated:** 2026-04-14
 
----
+## Goal
 
-## Overview
+Build an always-on Discord alert system that notifies Ruthwik about new
+bachelor-relevant internship, new-grad, early-career, seasonal, temporary,
+or contract roles at a curated set of high-priority companies as soon as the
+fastest reliable company-controlled source exposes the posting.
 
-An always-on job monitoring and career intelligence system that:
-1. Scrapes internship postings from 20+ sources every 15-60 minutes
-2. Sends instant Discord alerts to Ruthwik's phone in a mobile-friendly format
-3. Maintains an enriched knowledge base in Obsidian Vault (company profiles, interview prep, salary data)
-4. Generates a weekly LinkedIn newsletter draft ("Jobs with Ruthwik")
+The system is optimized for:
+
+- high alert precision
+- readable mobile-first Discord messages
+- fast detection for tier-1 companies
+- resume-actionable details
+
+This v1 is **not** a newsletter system, knowledge-base system, or general
+career platform. Those are later phases.
 
 ## User Profile
 
-- **Name**: Ruthwik Pabbu
-- **Background**: Stats + CS + Data Science @ UIUC
-- **Primary career track**: AI/Data (AI Engineer, ML Engineer, Data Engineer, Data Scientist, NLP, MLOps, CV, Research Eng)
-- **Secondary track**: Cloud/Infra/Security
-- **Baseline**: SWE (always applicable)
-- **Additional tracks**: Product/Leadership (consulting: MBB + Big 4), Sales/Client-Facing Technical, Extras (Quant, Robotics, Fintech)
+- UIUC Stats + CS + Data Science student
+- Primary tracks: `ai_data`, `swe`
+- Secondary tracks: `cloud_infra`, `sales_technical`, `consulting`, `extras`
+- Wants alerts where both career fit and likely networking leverage matter
 
-## Alert Priority Order
+## Tier Model
 
-1. Track 1 — AI/Data
-2. Track 3 — SWE (Baseline)
-3. Track 5 — Sales/Client-Facing Technical
-4. Track 4 — Product/Business/Leadership (MBB + Big 4 consulting focus)
-5. Track 6 — Extras/High-Upside
-6. Track 2 — Cloud/Infra/Security
+### Tier 1: Curated 25
 
----
+These companies get the highest-trust alert path and the strongest effort on
+speed, source quality, and filtering:
 
-## Architecture: Hybrid (Two Layers)
+1. Amazon
+2. Microsoft
+3. Google
+4. Apple
+5. Meta
+6. NVIDIA
+7. Databricks
+8. Palantir
+9. Cloudflare
+10. Datadog
+11. Shopify
+12. OpenAI
+13. Anthropic
+14. Cohere
+15. Stripe
+16. Ramp
+17. Capital One
+18. JPMorgan Chase
+19. Goldman Sachs
+20. Jane Street
+21. Citadel
+22. Two Sigma
+23. D. E. Shaw
+24. Netflix
+25. SpaceX
 
-### Layer 1 — Scraper (ComputeEdge/Hetzner, always-on, $3.49/mo)
+This list is chosen using a hybrid heuristic:
 
-A Python service deployed on Hetzner via ComputeEdge MCP at `http://178.104.137.52` that:
-- Polls job board APIs and aggregators on intervals (15-60 min)
-- Tracks seen postings in SQLite to avoid duplicates
-- Matches postings against role keywords organized by career track
-- Sends Discord webhook alerts in Format B when new matches found
-- Exposes a JSON feed of new postings for NanoClaw to consume
+- strong career fit for Ruthwik
+- public UIUC-friendly recruiting/alumni signals
+- high internship/new-grad relevance
+- feasible direct-source monitoring
 
-**Tech stack**: Python 3.12, JobSpy, aiohttp/httpx, SQLite, Discord webhook
+### Tier 2: Extended Target Universe
 
-### Layer 2 — AI Brain (NanoClaw, daytime on laptop)
+Broader Fortune 500, big-tech, fintech, quant, cloud, AI, and consulting
+coverage. Tier 2 is important, but it must not lower tier-1 quality.
 
-NanoClaw scheduled tasks that:
-- **Daily (12 PM + 6 PM CST)**: Read new postings feed, enrich Vault company docs
-- **Weekly (Sunday 3 PM CST)**: Generate newsletter draft
-- **Weekly**: Update Fortune 500 master doc + interview questions
-- **On-demand**: Respond to Discord messages ("prep me for Stripe SWE")
+### Tier 3: Discovery
 
----
+Aggregators, GitHub repos, and community sources used for backfill or future
+promotion into tier 1 or tier 2. These do not define the core “post ASAP”
+promise for tier 1.
 
-## Data Sources
+## Source Selection Rule
 
-### Tier 1 — Direct Company APIs (15 min poll)
+For each company, use the **fastest reliable company-controlled source**.
 
-| API | Companies |
-|-----|-----------|
-| Greenhouse | Citadel, Jane Street, Two Sigma, DE Shaw, Palantir, Databricks, Figma, Notion, Datadog, Cloudflare |
-| Ashby | Anthropic, OpenAI, Cohere, Mistral |
-| Lever | Netflix, SpaceX, Scale AI |
-| Amazon Jobs | Amazon, AWS |
-| Apple Jobs | Apple |
+Preferred order:
 
-### Tier 2 — Aggregators (30 min poll)
+1. Direct ATS/API endpoint
+2. Direct company careers page or company-controlled JSON feed
+3. High-quality fallback source
+4. Aggregator or GitHub/community discovery source
 
-| Source | Coverage |
-|--------|----------|
-| JobSpy (Python) | LinkedIn, Indeed, Glassdoor, Google Jobs, ZipRecruiter |
-| SimplifyJobs GitHub | 500+ companies, structured JSON |
-| jobright-ai/2026-Internship GitHub | AI-curated, all industries |
-| speedyapply/2026-AI-College-Jobs GitHub | AI/ML specific |
-| intern-list.com | Hourly from 200K+ career sites |
+Important: ATS is not always better than the careers page. The source of truth
+for a company is whichever direct company-controlled source proves to expose the
+role fastest and most reliably in practice.
 
-### Tier 3 — Fragile/Custom Scraping (60 min poll)
+## Qualification Rules
 
-| Source | Companies |
-|--------|-----------|
-| Google Careers JSON | Google, DeepMind |
-| Microsoft Careers | Microsoft |
-| Workday endpoints | Nvidia, Tesla, JPMorgan, Goldman Sachs |
-| LinkedIn guest endpoint | Job listings without login |
-| McKinsey/BCG/Bain career pages | MBB consulting |
-| Deloitte/PwC/EY/KPMG | Big 4 consulting |
+A role should alert only if all of the following are true:
 
-### Tier 4 — Community Intel (60 min poll)
+- company belongs to an enabled target tier
+- title/description indicate a bachelor-relevant role
+- posting matches one of Ruthwik’s target tracks
+- posting is not excluded by advanced-degree or seniority rules
 
-14 subreddits via Reddit JSON API:
-r/csMajors, r/cscareerquestions, r/internships, r/leetcode, r/datascience, r/MachineLearning, r/UIUC, r/recruitinghell, r/experienceddevs, r/SoftwareEngineerJobs, r/FAANGrecruiting, r/SaaS, r/jobs, r/forhire
+### Included role signals
 
-### Tier 5 — Interview & Salary Intel (daily)
+- intern
+- internship
+- new grad
+- early career
+- entry level
+- recent graduate
+- seasonal
+- contract
+- temporary
 
-- LeetCode Discuss (GraphQL API)
-- HN "Who's Hiring" (Algolia API)
-- levels.fyi (key pages)
-- layoffs.fyi (hiring freezes)
+### Excluded role signals
 
-### Tier 6 — Social Media (weekly, AI enrichment)
+- co-op
+- apprenticeship programs that require leaving school full-time
+- PhD/MS/doctoral required roles
+- senior/staff/principal/lead/manager/director roles
+- experienced-hire roles that clearly expect beyond entry-level experience
 
-- LinkedIn posts/newsletters: Google `site:linkedin.com/pulse` queries
-- X/Twitter: RSS bridges for ~20 curated recruiter accounts
-- Blind: Google `site:teamblind.com` queries
+Interpretation rule:
 
----
+`bachelor-relevant` means appropriate for a student currently pursuing a B.S.
+or a very recent graduate from that same pipeline.
 
-## Discord Alert Format (Format B)
+## Alert Contract
 
+Alerts must be short, readable, and immediately useful on mobile.
+
+### Required fields
+
+- company
+- title
+- tier
+- track
+- source name
+- apply URL
+- source quality label
+- timestamp
+- 3-5 key skills or hiring signals
+
+### Timestamp rule
+
+If the source provides a real posting timestamp:
+
+- show `Posted: <time in CT> (<relative age>)`
+
+If the source does not provide a real posting timestamp:
+
+- show `Detected: <time in CT> (<relative age>)`
+
+The system must never pretend a first-seen timestamp is a true posted timestamp.
+
+### Message shape
+
+```text
+[T1 AI/DATA] Machine Learning Intern @ Databricks
+Posted: 2026-04-14 1:35 PM CT (2h ago)
+Source: Greenhouse (direct ATS)
+Why matched: ai_data, machine learning, research engineer
+
+Key skills:
+- Python
+- PyTorch
+- distributed systems
+- data pipelines
+
+Apply: https://...
+Prep: Vault/companies/databricks.md
 ```
-🔴 NEW: SWE Intern @ Stripe
-Team: Payment Infrastructure
-Skills: Python, distributed systems, API design
-Deadline: Rolling (apply fast)
-Comp: ~$55/hr
-Link: https://jobs.stripe.com/...
-📄 Prep doc → Vault/companies/stripe.md
-```
 
-Priority tiers affect formatting:
-- Track 1 (AI/Data): 🔴 red indicator
-- Track 3 (SWE): 🟠 orange
-- Track 5 (Sales/Technical): 🟡 yellow
-- Track 4 (Consulting): 🔵 blue
-- Track 6 (Extras): 🟢 green
-- Track 2 (Cloud/Infra): ⚪ white
+### Payload principles
 
----
+- no walls of text
+- no raw job description dumps
+- no fake precision
+- only the details needed to decide whether to apply, tailor, or network
 
-## Vault Structure
+## Data Model Requirements
 
-```
-~/Vault/NanoClaw/
-├── career-plan/
-│   ├── career-tracks.md          (already created)
-│   └── grad-school-plan.md       (already created)
-├── jojo-project/
-│   ├── design-spec.md            (copy of this spec)
-│   └── session-context.md        (conversation context for future sessions)
-├── companies/
-│   ├── {company-slug}.md         (per-company: team info, interview Qs, salary, culture)
-│   └── fortune-500-master.md     (master list + interview questions, updated weekly)
-├── newsletters/
-│   └── YYYY-MM-DD.md             (weekly newsletter drafts)
-├── intel/
-│   ├── reddit-weekly.md          (curated Reddit intel)
-│   ├── interview-questions.md    (cross-company LeetCode/interview patterns)
-│   └── market-trends.md          (layoffs, hiring freezes, salary trends)
-└── scraper-feed/
-    └── latest.json               (JSON feed for NanoClaw to consume)
-```
+Each stored posting should preserve:
 
----
+- `source`
+- `source_type`
+- `company_slug`
+- `company_name`
+- `tier`
+- `track`
+- `posting_id`
+- `title`
+- `url`
+- `description`
+- `key_skills`
+- `posted_at`
+- `first_seen_at`
+- `matched_keyword`
 
-## Newsletter: "Jobs with Ruthwik"
+## Success Criteria
 
-- **Cadence**: Weekly (Sunday)
-- **Output**: `~/Vault/NanoClaw/newsletters/YYYY-MM-DD.md`
-- **Ruthwik copy-pastes to LinkedIn manually**
-- **Voice**: Must read like Ruthwik wrote it — no AI tells
-- **Structure**: One big insight/trend + 3-5 curated data points + one actionable takeaway
-- **Length**: 800-1200 words, scannable with headers and bullets
-- **Sources**: Job posting trends, Reddit intel, interview reports, salary data, market signals
+V1 is successful when:
 
----
+- tier-1 companies are explicitly represented in config
+- tier-1 alerts prefer direct company-controlled sources
+- non-bachelor and non-student-relevant roles are filtered out
+- Discord alerts contain honest timestamps and concise key skills
+- the system can be verified end to end with live `/health`, `/feed`, and
+  a sample alert payload
 
-## Deployment
+## Non-Goals For V1
 
-- **Scraper**: Hetzner CX23 via ComputeEdge MCP (256MB RAM, 38GB disk) — `http://178.104.137.52`, deployment `ce-hetzner-031d18a5`, repo `github.com/Pabbsters/jojo-scraper`
-- **NanoClaw tasks**: Existing launchd service on macOS
-- **Discord**: Webhook for alerts (no bot needed for outbound-only)
-- **Cost**: $3.49/mo
+- newsletter generation
+- broad Fortune 500 completeness
+- fully automatic referral discovery
+- full Vault enrichment automation
+- social/news/community intelligence as a primary alert path
 
----
+## Related Detailed Docs
 
-## Out of Scope (v1)
-
-- Auto-applying to jobs
-- LinkedIn post automation (manual copy-paste only)
-- Real-time LinkedIn/X post monitoring (weekly via Google search instead)
-- Handshake integration (requires .edu auth — add in v2)
-- Referral tracker (needs LinkedIn network access — add in v2)
-- Resume tailoring (add in v2 after knowledge base is populated)
+- [Detailed v1 spec](./superpowers/specs/2026-04-14-jojo-alerts-v1-design.md)
+- [Implementation plan](./superpowers/plans/2026-04-14-jojo-alerts-v1-implementation.md)

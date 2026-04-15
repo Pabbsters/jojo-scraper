@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from config import TRACK_PRIORITY
 from matching import classify_posting
 
 
@@ -148,6 +149,10 @@ class TestMatchedKeyword:
 class TestBachelorLevelFiltering:
     """Bachelor's filter should reject over-qualified/non-entry roles."""
 
+    def test_coop_posting_returns_none(self):
+        result = classify_posting("Software Engineer Co-op")
+        assert result is None
+
     def test_phd_posting_returns_none(self):
         result = classify_posting(
             "Machine Learning Intern",
@@ -169,10 +174,46 @@ class TestBachelorLevelFiltering:
         assert result is not None
         assert result["track"] == "swe"
 
+    def test_seasonal_student_relevant_posting_returns_match(self):
+        result = classify_posting(
+            "Seasonal Software Engineer",
+            description="Open to new grad and university hire candidates.",
+        )
+        assert result is not None
+        assert result["track"] == "swe"
+
+    def test_contract_student_relevant_posting_returns_match(self):
+        result = classify_posting(
+            "Contract Data Engineer",
+            description="Open to new grad and university hire candidates.",
+        )
+        assert result is not None
+        assert result["track"] == "ai_data"
+
+    def test_temporary_student_relevant_posting_returns_match(self):
+        result = classify_posting(
+            "Temporary Data Engineer",
+            description="The hiring manager is looking for university hire candidates.",
+        )
+        assert result is not None
+        assert result["track"] == "ai_data"
+
+    def test_plain_contract_posting_returns_none(self):
+        result = classify_posting("Contract Data Engineer")
+        assert result is None
+
+    def test_seasonal_title_without_student_context_returns_none(self):
+        result = classify_posting("Seasonal Software Engineer")
+        assert result is None
+
+    def test_experienced_contract_title_returns_none(self):
+        result = classify_posting("Temporary Senior Software Engineer")
+        assert result is None
+
     def test_no_intern_signal_in_title_returns_none(self):
         result = classify_posting(
             "Software Engineer",
-            description="Entry-level software engineering role.",
+            description="Software engineering role on the platform team.",
         )
         assert result is None
 
@@ -182,3 +223,18 @@ class TestBachelorLevelFiltering:
             description="Ideal candidate is pursuing a PhD in computer science.",
         )
         assert result is None
+
+
+class TestCanonicalTrackVocabulary:
+    def test_track_priority_order_is_unchanged(self):
+        expected_order = [
+            "ai_data",
+            "swe",
+            "sales_technical",
+            "consulting",
+            "extras",
+            "cloud_infra",
+        ]
+        assert set(TRACK_PRIORITY) == set(expected_order)
+        for earlier, later in zip(expected_order, expected_order[1:]):
+            assert TRACK_PRIORITY.index(earlier) < TRACK_PRIORITY.index(later)

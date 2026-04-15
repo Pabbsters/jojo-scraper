@@ -75,8 +75,28 @@ class TestFeedEndpoint:
     def test_returns_postings_with_default_since(self) -> None:
         mock_db = MagicMock()
         mock_db.get_feed_since.return_value = [
-            {"posting_id": "1", "title": "Intern A", "track": "swe"},
-            {"posting_id": "2", "title": "Intern B", "track": "ai_data"},
+            {
+                "posting_id": "1",
+                "title": "Intern A",
+                "track": "swe",
+                "tier": "tier_1",
+                "source_type": "direct",
+                "matched_keyword": "software engineer",
+                "key_skills": "python, distributed systems",
+                "posted_at": "2026-04-13T10:00:00Z",
+                "first_seen_at": 1713000000.0,
+            },
+            {
+                "posting_id": "2",
+                "title": "Intern B",
+                "track": "ai_data",
+                "tier": "tier_2",
+                "source_type": "aggregator",
+                "matched_keyword": "machine learning",
+                "key_skills": "python, pytorch",
+                "posted_at": "2026-04-12T09:00:00Z",
+                "first_seen_at": 1713000300.0,
+            },
         ]
 
         _, wfile = _make_handler("/feed", db=mock_db)
@@ -85,6 +105,12 @@ class TestFeedEndpoint:
         assert status == 200
         assert len(body["postings"]) == 2
         assert "generated_at" in body
+        assert body["postings"][0]["tier"] == "tier_1"
+        assert body["postings"][0]["source_type"] == "direct"
+        assert body["postings"][0]["matched_keyword"] == "software engineer"
+        assert body["postings"][0]["key_skills"] == "python, distributed systems"
+        assert body["postings"][0]["posted_at"] == "2026-04-13T10:00:00Z"
+        assert body["postings"][0]["first_seen_at"] == 1713000000.0
         mock_db.get_feed_since.assert_called_once()
 
     def test_respects_since_query_param(self) -> None:
