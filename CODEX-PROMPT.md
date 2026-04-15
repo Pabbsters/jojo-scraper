@@ -7,8 +7,8 @@ The scraper is fully deployed and live. Full context is at:
 - `github.com/Pabbsters/jojo-scraper` — deployed code, CONTEXT.md, docs/PLAN.md, docs/DESIGN.md
 - `github.com/Pabbsters/nanoclaw` branch `feat/jojo-scraper` — source of truth
 
-**Live deployment:** `http://178.104.137.52` (Hetzner via ComputeEdge MCP, $3.49/mo)
-**Deployment ID:** `ce-hetzner-dbe06520`
+**Live deployment:** `http://159.69.150.218` (Hetzner via ComputeEdge MCP, $3.49/mo)
+**Deployment ID:** `ce-hetzner-815715f4`
 
 Read `CONTEXT.md` and `docs/PLAN.md` before starting. The PLAN.md has the full task list.
 
@@ -20,7 +20,7 @@ Read `CONTEXT.md` and `docs/PLAN.md` before starting. The PLAN.md has the full t
 - [x] SQLite dedup, Discord webhook alerts (Format B rich card), /feed + /health HTTP endpoints
 - [x] Deployed to Hetzner via ComputeEdge MCP — `/health` returns 200, `/feed` returns real postings
 - [x] NanoClaw scheduled tasks registered: daily enrichment (12PM+6PM CST), weekly newsletter (Sun 3PM CST), weekly KB update (Sat 2AM CST)
-- [x] SCRAPER_FEED_URL wired into all NanoClaw task scripts pointing at `http://178.104.137.52`
+- [x] SCRAPER_FEED_URL wired into all NanoClaw task scripts pointing at `http://159.69.150.218`
 - [x] Bachelor's-level filter added — rejects PhD, senior, staff, principal, director roles and requires intern/new-grad/entry-level signal in title
 - [x] 184/184 tests passing
 
@@ -44,8 +44,8 @@ mcp__computeedge__deploy(
 
 After deploy, verify:
 ```bash
-curl http://178.104.137.52/health          # → {"status": "ok"}
-curl "http://178.104.137.52/feed" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d['postings']), 'postings')"
+curl http://159.69.150.218/health          # → {"status": "ok"}
+curl "http://159.69.150.218/feed" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d['postings']), 'postings')"
 ```
 
 ### 2. Confirm Discord alerts landed
@@ -71,7 +71,7 @@ Expected: 184 passed. Fix any failures — do NOT skip or mock.
 After confirming the deploy is live:
 
 ```python
-mcp__computeedge__monitor(deployment_id="ce-hetzner-dbe06520")
+mcp__computeedge__monitor(deployment_id="ce-hetzner-815715f4")
 ```
 
 Check:
@@ -100,7 +100,7 @@ sqlite3 ~/nanoclaw/store/messages.db 'SELECT id, status, next_run FROM scheduled
 
 If the tasks aren't registered, re-run:
 ```bash
-SCRAPER_URL=http://178.104.137.52 bash ~/nanoclaw/scraper/nanoclaw-tasks/setup-tasks.sh
+SCRAPER_URL=http://159.69.150.218 bash ~/nanoclaw/scraper/nanoclaw-tasks/setup-tasks.sh
 ```
 
 ### 7. Config tuning based on rate limits

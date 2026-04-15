@@ -7,11 +7,11 @@ This is the standalone deploy repo for the jojo internship scraper. It is a copy
 
 | Key | Value |
 |-----|-------|
-| URL | `http://178.104.137.52` |
-| Health | `GET http://178.104.137.52/health` |
-| Feed | `GET http://178.104.137.52/feed?since=<unix_ts>` |
+| URL | `http://159.69.150.218` |
+| Health | `GET http://159.69.150.218/health` |
+| Feed | `GET http://159.69.150.218/feed?since=<unix_ts>` |
 | Provider | Hetzner (via ComputeEdge MCP) |
-| Deployment ID | `ce-hetzner-dbe06520` |
+| Deployment ID | `ce-hetzner-815715f4` |
 | Cost | $3.49/mo |
 
 ## Repos
@@ -48,7 +48,7 @@ sources/         — one poller per job board
 - [x] 502 resolved and `/health` returns `{"status": "ok"}`
 - [x] `/feed` returns live JSON postings from the deployed service
 - [ ] Verify Discord alert fires for a real posting in the target channel
-- [ ] Wire `SCRAPER_FEED_URL=http://178.104.137.52` into NanoClaw tasks (see `nanoclaw/scraper/nanoclaw-tasks/`)
+- [ ] Wire `SCRAPER_FEED_URL=http://159.69.150.218` into NanoClaw tasks (see `nanoclaw/scraper/nanoclaw-tasks/`)
 - [x] Task 16: Daily AI enrichment NanoClaw task registered
 - [x] Task 17: Weekly newsletter NanoClaw task registered
 - [x] Task 18: Weekly knowledge base update NanoClaw task registered

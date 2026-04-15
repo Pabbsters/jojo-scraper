@@ -274,8 +274,8 @@ Use ComputeEdge with the canonical repo and existing deployment target.
 - [ ] **Step 2: Verify health and feed**
 
 Run:
-- `curl http://178.104.137.52/health`
-- `curl "http://178.104.137.52/feed?since=0"`
+- `curl http://159.69.150.218/health`
+- `curl "http://159.69.150.218/feed?since=0"`
 
 Expected:
 - health returns `{"status":"ok"}`
