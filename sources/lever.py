@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime
 
 import httpx
 
-from config import INTERN_TITLE_PATTERNS, LEVER_COMPANIES
+from config import ALERT_TITLE_PATTERNS, LEVER_COMPANIES
 
 LEVER_API = "https://api.lever.co/v0/postings/{slug}?mode=json"
 
@@ -14,7 +15,19 @@ LEVER_API = "https://api.lever.co/v0/postings/{slug}?mode=json"
 def is_intern_posting(title: str) -> bool:
     """Check if title matches any intern pattern."""
     title_lower = title.lower()
-    return any(re.search(p, title_lower) for p in INTERN_TITLE_PATTERNS)
+    return any(re.search(p, title_lower) for p in ALERT_TITLE_PATTERNS)
+
+
+def _format_timestamp(raw: object) -> str:
+    if raw in (None, ""):
+        return ""
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return str(raw).strip()
+    if value > 10_000_000_000:
+        value /= 1000
+    return datetime.fromtimestamp(value, tz=UTC).isoformat().replace("+00:00", "Z")
 
 
 def parse_lever_jobs(
@@ -39,6 +52,7 @@ def parse_lever_jobs(
         skills = description[:200].strip() if description else ""
 
         location = categories.get("location", "")
+        posted_at = _format_timestamp(job.get("createdAt") or job.get("updatedAt"))
 
         results.append({
             "posting_id": str(job.get("id", "")),
@@ -49,6 +63,7 @@ def parse_lever_jobs(
             "team": team,
             "skills": skills,
             "location": location,
+            "posted_at": posted_at,
         })
 
     return results

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 import logging
 import os
 
@@ -17,14 +18,11 @@ from sources import (
     amazon,
     apple,
     ashby,
-    github_repos,
     greenhouse,
-    hn,
-    jobspy_agg,
     lever,
-    reddit,
     workday,
 )
+from targeting import should_accept_posting
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,15 +44,25 @@ def _get_company_tier(company_slug: str) -> str:
     return "tier_1" if company_slug in _TIER1_COMPANY_SLUGS else ""
 
 
-async def process_postings(postings: list[dict], source: str) -> None:
+async def process_postings(
+    postings: list[dict],
+    source: str,
+    *,
+    now: datetime | None = None,
+) -> None:
     """Check each posting against DB, classify, store, and alert."""
     new_count = 0
+    reference_time = now or datetime.now(UTC)
     for p in postings:
         posting = dict(p)
         posting_id = str(p.get("posting_id", ""))
         company_slug = str(p.get("company_slug", "unknown")).strip()
         preferred_source = _get_tier1_source_preference(company_slug)
         tier = _get_company_tier(company_slug)
+
+        if not should_accept_posting(posting, source, now=reference_time):
+            continue
+
         canonical_source, canonical_posting_id = _canonical_identity_for_posting(
             source,
             company_slug,
@@ -79,9 +87,7 @@ async def process_postings(postings: list[dict], source: str) -> None:
         if p.get("posted_at"):
             posting["posted_at"] = str(p.get("posted_at"))
         posting["source_type"] = (
-            "direct"
-            if preferred_source is not None and source == canonical_source
-            else ("fallback" if preferred_source is not None else "")
+            "direct" if preferred_source is not None and source == canonical_source else ""
         )
         posting["canonical_source"] = canonical_source
         posting["canonical_posting_id"] = canonical_posting_id
@@ -138,18 +144,6 @@ async def poll_lever() -> None:
     await process_postings(postings, "lever")
 
 
-async def poll_github() -> None:
-    postings = await github_repos.poll_all()
-    await process_postings(postings, "github")
-
-
-async def poll_jobspy_wrapper() -> None:
-    """JobSpy is sync - run in executor."""
-    loop = asyncio.get_running_loop()
-    postings = await loop.run_in_executor(None, jobspy_agg.poll_jobspy)
-    await process_postings(postings, "jobspy")
-
-
 async def poll_amazon_jobs() -> None:
     postings = await amazon.poll_all()
     await process_postings(postings, "amazon")
@@ -158,16 +152,6 @@ async def poll_amazon_jobs() -> None:
 async def poll_apple_jobs() -> None:
     postings = await apple.poll_all()
     await process_postings(postings, "apple")
-
-
-async def poll_reddit_feeds() -> None:
-    postings = await reddit.poll_all()
-    await process_postings(postings, "reddit")
-
-
-async def poll_hn_feeds() -> None:
-    postings = await hn.poll_all()
-    await process_postings(postings, "hn")
 
 
 async def poll_workday_feeds() -> None:
@@ -206,22 +190,6 @@ async def _async_main() -> None:
         next_run_time=None,
     )
     scheduler.add_job(
-        poll_github,
-        "interval",
-        minutes=POLL_INTERVAL_MINUTES["github"],
-        id="github",
-        next_run_time=None,
-    )
-
-    # Tier 2: Aggregators - JobSpy runs slightly slower for stability.
-    scheduler.add_job(
-        poll_jobspy_wrapper,
-        "interval",
-        minutes=POLL_INTERVAL_MINUTES["jobspy"],
-        id="jobspy",
-        next_run_time=None,
-    )
-    scheduler.add_job(
         poll_amazon_jobs,
         "interval",
         minutes=POLL_INTERVAL_MINUTES["amazon"],
@@ -235,15 +203,6 @@ async def _async_main() -> None:
         id="apple",
         next_run_time=None,
     )
-
-    # Tier 3: Community - every 60 min
-    scheduler.add_job(
-        poll_reddit_feeds,
-        "interval",
-        minutes=POLL_INTERVAL_MINUTES["reddit"],
-        id="reddit",
-        next_run_time=None,
-    )
     scheduler.add_job(
         poll_workday_feeds,
         "interval",
@@ -252,23 +211,13 @@ async def _async_main() -> None:
         next_run_time=None,
     )
 
-    # Tier 4: Daily
-    scheduler.add_job(
-        poll_hn_feeds,
-        "interval",
-        minutes=POLL_INTERVAL_MINUTES["hn"],
-        id="hn",
-        next_run_time=None,
-    )
-
     scheduler.start()
-    logger.info("Scheduler started -- all sources armed")
+    logger.info("Scheduler started -- direct careers sources armed")
 
     # Run initial poll — individual failures are logged, not raised
     results = await asyncio.gather(
         poll_greenhouse(), poll_ashby(), poll_lever(),
-        poll_github(), poll_amazon_jobs(), poll_apple_jobs(),
-        poll_reddit_feeds(), poll_hn_feeds(),
+        poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
         return_exceptions=True,
     )
     for r in results:

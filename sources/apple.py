@@ -29,6 +29,12 @@ def parse_apple_jobs(raw: dict) -> list[dict]:
 
         transformed_url = role.get("transformedPostingUrl", "")
         url = f"{APPLE_BASE}{transformed_url}" if transformed_url else ""
+        posted_at = str(
+            role.get("postingDate")
+            or role.get("postingPostDate")
+            or role.get("datePosted")
+            or ""
+        ).strip()
 
         results.append({
             "posting_id": position_id,
@@ -39,6 +45,7 @@ def parse_apple_jobs(raw: dict) -> list[dict]:
             "team": "",
             "skills": "",
             "location": location,
+            "posted_at": posted_at,
         })
 
     return results

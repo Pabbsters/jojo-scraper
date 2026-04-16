@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import main
@@ -13,8 +14,8 @@ def _tier1_posting(
     *,
     posting_id: str,
     url: str,
-    title: str = "Machine Learning Intern",
-    description: str = "Build ML systems for search relevance.",
+    title: str = "Machine Learning Intern - Summer 2026",
+    description: str = "Build ML systems for search relevance in the US.",
 ) -> dict:
     return {
         "posting_id": posting_id,
@@ -25,7 +26,32 @@ def _tier1_posting(
         "company_name": "OpenAI",
         "skills": "Python",
         "team": "AI Platform",
+        "location": "San Francisco, CA, United States",
     }
+
+
+def _recent_timestamp() -> str:
+    return "2026-04-14T15:00:00Z"
+
+
+def _run_process(
+    posting: dict,
+    source: str,
+    tmp_path,
+    monkeypatch,
+) -> tuple[PostingDB, AsyncMock]:
+    test_db = PostingDB(str(tmp_path / f"{source}.db"))
+    monkeypatch.setattr(main, "db", test_db)
+    mock_send_alert = AsyncMock()
+    monkeypatch.setattr(main, "send_alert", mock_send_alert)
+    asyncio.run(
+        main.process_postings(
+            [posting],
+            source,
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
+    return test_db, mock_send_alert
 
 
 def test_process_postings_classifies_stores_and_dedups(tmp_path, monkeypatch) -> None:
@@ -36,27 +62,34 @@ def test_process_postings_classifies_stores_and_dedups(tmp_path, monkeypatch) ->
     mock_send_alert = AsyncMock()
     monkeypatch.setattr(main, "send_alert", mock_send_alert)
 
-    posting = {
-        "posting_id": "job-123",
-        "title": "Machine Learning Intern",
-        "description": "Build ML systems for search relevance.",
-        "url": "https://example.com/jobs/123",
-        "company_slug": "acme",
-        "company_name": "Acme",
-        "skills": "Python",
-        "team": "AI Platform",
-    }
+    posting = _tier1_posting(
+        posting_id="job-123",
+        url="https://jobs.openai.com/careers/123?jobId=123",
+    )
+    posting["posted_at"] = _recent_timestamp()
 
-    asyncio.run(main.process_postings([posting], "jobspy"))
-    asyncio.run(main.process_postings([posting], "jobspy"))
+    asyncio.run(
+        main.process_postings(
+            [posting],
+            "ashby",
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
+    asyncio.run(
+        main.process_postings(
+            [posting],
+            "ashby",
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
 
     stored = test_db.get_recent(limit=10)
     assert len(stored) == 1
     assert stored[0]["track"] == "ai_data"
-    assert stored[0]["company_name"] == "Acme"
-    assert stored[0]["source"] == "jobspy"
-    assert stored[0]["canonical_source"] == "jobspy"
-    assert stored[0]["canonical_posting_id"] == "job-123"
+    assert stored[0]["company_name"] == "OpenAI"
+    assert stored[0]["source"] == "ashby"
+    assert stored[0]["canonical_source"] == "ashby"
+    assert stored[0]["canonical_posting_id"] == "openai|https://jobs.openai.com/careers/123?jobId=123"
     mock_send_alert.assert_awaited_once()
 
     test_db.close()
@@ -80,7 +113,13 @@ def test_process_postings_threads_metadata_into_storage_and_alert(
     posting["skills"] = "Python, PyTorch, distributed systems"
     posting["posted_at"] = "2026-04-14T15:00:00Z"
 
-    asyncio.run(main.process_postings([posting], "ashby"))
+    asyncio.run(
+        main.process_postings(
+            [posting],
+            "ashby",
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
 
     stored = test_db.get_recent(limit=1)
     assert len(stored) == 1
@@ -112,74 +151,6 @@ def test_process_postings_threads_metadata_into_storage_and_alert(
     test_db.close()
 
 
-def test_process_postings_fallback_first_then_preferred_later_uses_one_canonical_copy(
-    tmp_path, monkeypatch
-) -> None:
-    """Fallback-first and preferred-later copies should collapse into one canonical record."""
-    test_db = PostingDB(str(tmp_path / "tier1_accept.db"))
-    monkeypatch.setattr(main, "db", test_db)
-
-    mock_send_alert = AsyncMock()
-    monkeypatch.setattr(main, "send_alert", mock_send_alert)
-
-    fallback_posting = _tier1_posting(
-        posting_id="gh-123",
-        url="https://jobs.openai.com/careers/123?jobId=123&ref=github",
-    )
-    preferred_posting = _tier1_posting(
-        posting_id="ash-999",
-        url="https://jobs.openai.com/careers/123?jobId=123&utm_source=ashby",
-    )
-
-    asyncio.run(main.process_postings([fallback_posting], "github"))
-    asyncio.run(main.process_postings([preferred_posting], "ashby"))
-
-    stored = test_db.get_recent(limit=10)
-    assert len(stored) == 1
-    assert stored[0]["source"] == "github"
-    assert stored[0]["source_type"] == "fallback"
-    assert stored[0]["canonical_source"] == "ashby"
-    assert stored[0]["canonical_posting_id"] == "openai|https://jobs.openai.com/careers/123?jobId=123"
-    assert stored[0]["company_slug"] == "openai"
-    mock_send_alert.assert_awaited_once()
-
-    test_db.close()
-
-
-def test_process_postings_preferred_first_then_fallback_keeps_preferred_copy(
-    tmp_path, monkeypatch
-) -> None:
-    """Preferred copies should remain canonical when a fallback arrives later."""
-    test_db = PostingDB(str(tmp_path / "tier1_skip.db"))
-    monkeypatch.setattr(main, "db", test_db)
-
-    mock_send_alert = AsyncMock()
-    monkeypatch.setattr(main, "send_alert", mock_send_alert)
-
-    preferred_posting = _tier1_posting(
-        posting_id="ash-123",
-        url="https://jobs.openai.com/careers/456?jobId=456",
-    )
-    fallback_posting = _tier1_posting(
-        posting_id="gh-456",
-        url="https://jobs.openai.com/careers/456/?jobId=456&utm_source=github",
-    )
-
-    asyncio.run(main.process_postings([preferred_posting], "ashby"))
-    asyncio.run(main.process_postings([fallback_posting], "github"))
-
-    stored = test_db.get_recent(limit=10)
-    assert len(stored) == 1
-    assert stored[0]["source"] == "ashby"
-    assert stored[0]["source_type"] == "direct"
-    assert stored[0]["canonical_source"] == "ashby"
-    assert stored[0]["canonical_posting_id"] == "openai|https://jobs.openai.com/careers/456?jobId=456"
-    assert stored[0]["company_slug"] == "openai"
-    mock_send_alert.assert_awaited_once()
-
-    test_db.close()
-
-
 def test_process_postings_keeps_distinct_tier1_jobs_separate(tmp_path, monkeypatch) -> None:
     """Distinct tier-1 jobs should still produce distinct canonical rows."""
     test_db = PostingDB(str(tmp_path / "tier1_distinct.db"))
@@ -189,26 +160,156 @@ def test_process_postings_keeps_distinct_tier1_jobs_separate(tmp_path, monkeypat
     monkeypatch.setattr(main, "send_alert", mock_send_alert)
 
     first_posting = _tier1_posting(
-        posting_id="gh-111",
-        url="https://jobs.openai.com/careers/roles?jobId=111&utm_source=github",
+        posting_id="ash-111",
+        url="https://jobs.openai.com/careers/roles?jobId=111",
     )
     second_posting = _tier1_posting(
-        posting_id="gh-222",
-        url="https://jobs.openai.com/careers/roles?jobId=222&utm_source=github",
-        title="Software Engineer Intern",
-        description="Build developer tools for platform engineering.",
+        posting_id="ash-222",
+        url="https://jobs.openai.com/careers/roles?jobId=222",
+        title="Software Engineer Intern - Summer 2026",
+        description="Build developer tools for platform engineering in the United States.",
     )
+    first_posting["posted_at"] = _recent_timestamp()
+    second_posting["posted_at"] = _recent_timestamp()
 
-    asyncio.run(main.process_postings([first_posting], "github"))
-    asyncio.run(main.process_postings([second_posting], "github"))
+    asyncio.run(
+        main.process_postings(
+            [first_posting],
+            "ashby",
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
+    asyncio.run(
+        main.process_postings(
+            [second_posting],
+            "ashby",
+            now=datetime(2026, 4, 15, 18, 0, tzinfo=UTC),
+        )
+    )
 
     stored = test_db.get_recent(limit=10)
     assert len(stored) == 2
-    assert {row["posting_id"] for row in stored} == {"gh-111", "gh-222"}
+    assert {row["posting_id"] for row in stored} == {"ash-111", "ash-222"}
     assert {row["canonical_posting_id"] for row in stored} == {
         "openai|https://jobs.openai.com/careers/roles?jobId=111",
         "openai|https://jobs.openai.com/careers/roles?jobId=222",
     }
     assert mock_send_alert.await_count == 2
 
+    test_db.close()
+
+
+def test_process_postings_rejects_non_direct_source(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="gh-123",
+        url="https://jobs.openai.com/careers/123?jobId=123&ref=github",
+    )
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "github", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_rejects_non_target_company(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="fig-123",
+        url="https://jobs.example.com/123",
+    )
+    posting["company_slug"] = "figma"
+    posting["company_name"] = "Figma"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "greenhouse", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_requires_trustworthy_posted_at(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-124",
+        url="https://jobs.openai.com/careers/124?jobId=124",
+    )
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_rejects_stale_posting(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-125",
+        url="https://jobs.openai.com/careers/125?jobId=125",
+    )
+    posting["posted_at"] = "2026-04-10T10:00:00Z"
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_rejects_summer_non_us_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-126",
+        url="https://jobs.openai.com/careers/126?jobId=126",
+    )
+    posting["location"] = "Toronto, Ontario, Canada"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_accepts_spring_remote_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-127",
+        url="https://jobs.openai.com/careers/127?jobId=127",
+        title="ML Engineer Intern - Spring 2026",
+        description="Remote internship building model training systems.",
+    )
+    posting["location"] = "Remote - United States"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    stored = test_db.get_recent(limit=10)
+    assert len(stored) == 1
+    assert stored[0]["company_slug"] == "openai"
+    mock_send_alert.assert_awaited_once()
+    test_db.close()
+
+
+def test_process_postings_rejects_fall_non_remote_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-128",
+        url="https://jobs.openai.com/careers/128?jobId=128",
+        title="ML Engineer Intern - Fall 2026",
+        description="Onsite internship building inference systems.",
+    )
+    posting["location"] = "Seattle, WA, United States"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_rejects_non_internship_style_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-129",
+        url="https://jobs.openai.com/careers/129?jobId=129",
+        title="Software Engineer New Grad - Summer 2026",
+        description="Bachelor's degree in computer science required.",
+    )
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
     test_db.close()

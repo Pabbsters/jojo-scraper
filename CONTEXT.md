@@ -26,8 +26,8 @@ When making changes, apply them here AND in `nanoclaw/scraper/` to keep them in 
 ## What This Does
 
 Always-on Python scraper that:
-- Polls 20+ job boards (Greenhouse, Ashby, Lever, GitHub, JobSpy, Amazon, Apple, Reddit, HN, Workday) every 15-60 min
-- Matches postings against internship keywords for AI/Data, SWE, Cloud/Infra, MBB Consulting, Sales/Tech career tracks
+- Polls direct company-controlled sources (Greenhouse, Ashby, Lever, Amazon, Apple, Workday)
+- Restricts alerts to a curated top-50 company universe with season, freshness, and bachelor's-level policy gates
 - Sends Discord webhook alerts (Format B rich card) for new matches
 - Exposes `GET /feed` JSON endpoint for NanoClaw AI tasks to consume
 
@@ -47,7 +47,7 @@ sources/         — one poller per job board
 
 - [x] 502 resolved and `/health` returns `{"status": "ok"}`
 - [x] `/feed` returns live JSON postings from the deployed service
-- [ ] Verify Discord alert fires for a real posting in the target channel
+- [x] Discord delivery path previously confirmed by user
 - [ ] Wire `SCRAPER_FEED_URL=http://159.69.150.218` into NanoClaw tasks (see `nanoclaw/scraper/nanoclaw-tasks/`)
 - [x] Task 16: Daily AI enrichment NanoClaw task registered
 - [x] Task 17: Weekly newsletter NanoClaw task registered

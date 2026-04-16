@@ -61,14 +61,9 @@ Polling intervals can be tuned without code changes:
 export POLL_GREENHOUSE_MINUTES=15
 export POLL_ASHBY_MINUTES=15
 export POLL_LEVER_MINUTES=15
-export POLL_GITHUB_MINUTES=15
-export POLL_JOBSPY_MINUTES=45
 export POLL_AMAZON_MINUTES=30
 export POLL_APPLE_MINUTES=30
-export POLL_REDDIT_MINUTES=60
 export POLL_WORKDAY_MINUTES=60
-export POLL_HN_MINUTES=1440
 ```
 
-`POLL_JOBSPY_MINUTES=45` is the default to reduce LinkedIn/Glassdoor scraping
-pressure while keeping the feed fresh.
+The active production policy now polls only direct company-controlled sources.

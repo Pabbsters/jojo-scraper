@@ -25,6 +25,13 @@ def parse_amazon_jobs(raw: dict) -> list[dict]:
         job_path = job.get("job_path", "")
         url = f"{AMAZON_BASE}{job_path}" if job_path else ""
         location = job.get("normalized_location", "")
+        posted_at = str(
+            job.get("posted_date")
+            or job.get("postedDate")
+            or job.get("posting_date")
+            or job.get("date_posted")
+            or ""
+        ).strip()
 
         basic_quals = job.get("basic_qualifications", "") or ""
         skills = basic_quals[:200].strip()
@@ -38,6 +45,7 @@ def parse_amazon_jobs(raw: dict) -> list[dict]:
             "team": "",
             "skills": skills,
             "location": location,
+            "posted_at": posted_at,
         })
 
     return results

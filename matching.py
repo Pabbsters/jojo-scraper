@@ -9,6 +9,7 @@ from config import (
     EXCLUDE_PATTERNS,
     INTERN_TITLE_PATTERNS,
     SEASONAL_CONTRACT_TITLE_TERMS,
+    STUDENT_SIGNAL_PATTERNS,
     TRACK_KEYWORDS,
     TRACK_PRIORITY,
 )
@@ -35,6 +36,10 @@ def _matches_any(patterns: list[str], text: str) -> bool:
     return any(re.search(pattern, text) for pattern in patterns)
 
 
+def _has_manager_exception(title: str) -> bool:
+    return "product manager" in title or "program manager" in title
+
+
 def _is_bachelor_level(title: str, description: str) -> bool:
     """Return True if the posting is appropriate for a bachelor's student.
 
@@ -49,7 +54,9 @@ def _is_bachelor_level(title: str, description: str) -> bool:
     # Seniority signals should be title-based so normal prose like
     # "hiring manager" or "reports to the director" in descriptions does not
     # incorrectly reject an otherwise valid role.
-    if _matches_any(_TITLE_EXCLUDE_PATTERNS, title_lower):
+    if _matches_any(_TITLE_EXCLUDE_PATTERNS, title_lower) and not _has_manager_exception(
+        title_lower
+    ):
         return False
 
     # Hard exclusions that legitimately can appear in descriptions too.
@@ -60,10 +67,10 @@ def _is_bachelor_level(title: str, description: str) -> bool:
     if _matches_any(INTERN_TITLE_PATTERNS, combined_lower):
         return True
 
-    # Seasonal / contract / temporary roles only qualify when the posting
-    # also makes the student-facing intent explicit.
+    # Seasonal / contract / part-time roles qualify when the posting makes the
+    # student or bachelor's-level intent explicit.
     if _matches_any(SEASONAL_CONTRACT_TITLE_TERMS, title_lower) and _matches_any(
-        INTERN_TITLE_PATTERNS, combined_lower
+        STUDENT_SIGNAL_PATTERNS, combined_lower
     ):
         return True
 

@@ -54,6 +54,11 @@ def _parse_datetime(value: object) -> datetime | None:
         raw = value.strip()
         if not raw:
             return None
+        if raw.isdigit():
+            seconds = float(raw)
+            if seconds > 10_000_000_000:
+                seconds /= 1000
+            return datetime.fromtimestamp(seconds, tz=UTC)
         if raw.endswith("Z"):
             raw = raw[:-1] + "+00:00"
         try:
@@ -207,6 +212,14 @@ def format_alert(posting: dict) -> str:
     source_line = _source_label(posting)
     if source_line:
         lines.append(f"Source: {source_line}")
+
+    team = str(posting.get("team", "")).strip()
+    if team:
+        lines.append(f"Team: {team}")
+
+    location = str(posting.get("location", "")).strip()
+    if location:
+        lines.append(f"Location: {location}")
 
     why_matched = _why_matched(posting)
     if why_matched:

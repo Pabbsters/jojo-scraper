@@ -174,6 +174,21 @@ class TestBachelorLevelFiltering:
         assert result is not None
         assert result["track"] == "swe"
 
+    def test_bachelors_or_masters_requirement_returns_match(self):
+        result = classify_posting(
+            "Machine Learning Engineer Intern",
+            description="Pursuing a Bachelor's or Master's degree in computer science.",
+        )
+        assert result is not None
+        assert result["track"] == "ai_data"
+
+    def test_masters_required_returns_none(self):
+        result = classify_posting(
+            "Machine Learning Engineer Intern",
+            description="Master's degree required for this internship.",
+        )
+        assert result is None
+
     def test_seasonal_student_relevant_posting_returns_match(self):
         result = classify_posting(
             "Seasonal Software Engineer",
@@ -238,3 +253,23 @@ class TestCanonicalTrackVocabulary:
         assert set(TRACK_PRIORITY) == set(expected_order)
         for earlier, later in zip(expected_order, expected_order[1:]):
             assert TRACK_PRIORITY.index(earlier) < TRACK_PRIORITY.index(later)
+
+    def test_backend_engineer_maps_to_swe(self):
+        result = classify_posting("Backend Engineer Intern - Summer 2026")
+        assert result is not None
+        assert result["track"] == "swe"
+
+    def test_quant_researcher_maps_to_extras(self):
+        result = classify_posting("Quant Researcher Intern - Summer 2026")
+        assert result is not None
+        assert result["track"] == "extras"
+
+    def test_quant_trader_maps_to_extras(self):
+        result = classify_posting("Quant Trader Intern - Summer 2026")
+        assert result is not None
+        assert result["track"] == "extras"
+
+    def test_ai_product_manager_maps_to_ai_data(self):
+        result = classify_posting("AI Product Manager Intern - Summer 2026")
+        assert result is not None
+        assert result["track"] == "ai_data"

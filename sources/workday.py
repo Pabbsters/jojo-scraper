@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 
-from config import INTERN_TITLE_PATTERNS
+from config import ALERT_TITLE_PATTERNS
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ _JSONLD_RE = re.compile(
 def is_intern_posting(title: str) -> bool:
     """Check if title matches any intern pattern."""
     title_lower = title.lower()
-    return any(re.search(p, title_lower) for p in INTERN_TITLE_PATTERNS)
+    return any(re.search(p, title_lower) for p in ALERT_TITLE_PATTERNS)
 
 
 def _extract_jsonld_postings(html: str) -> list[dict[str, Any]]:
@@ -97,6 +97,7 @@ def parse_jsonld_jobs(
             address = job_location.get("address", {})
             if isinstance(address, dict):
                 location = address.get("addressLocality", "")
+        posted_at = str(item.get("datePosted", "")).strip()
 
         results.append({
             "posting_id": posting_id,
@@ -107,6 +108,7 @@ def parse_jsonld_jobs(
             "team": "",
             "skills": skills,
             "location": location,
+            "posted_at": posted_at,
         })
 
     return results

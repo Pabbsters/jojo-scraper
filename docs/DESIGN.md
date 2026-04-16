@@ -1,20 +1,20 @@
-# Jojo Alerts V1 Design
+# Jojo Alerts Design
 
-**Status:** Active source of truth for v1
-**Last updated:** 2026-04-14
+**Status:** Active source of truth
+**Last updated:** 2026-04-15
 
 ## Goal
 
-Build an always-on Discord alert system that notifies Ruthwik about new
-bachelor-relevant internship, new-grad, early-career, seasonal, temporary,
-or contract roles at a curated set of high-priority companies as soon as the
-fastest reliable company-controlled source exposes the posting.
+Build an always-on Discord alert system that notifies Ruthwik about fresh,
+bachelor-relevant internship, part-time, seasonal, temporary, or contract
+roles at a curated top-50 company universe as soon as a direct
+company-controlled source exposes the posting.
 
 The system is optimized for:
 
 - high alert precision
 - readable mobile-first Discord messages
-- fast detection for tier-1 companies
+- fast detection for curated direct-source companies
 - resume-actionable details
 
 This v1 is **not** a newsletter system, knowledge-base system, or general
@@ -27,56 +27,18 @@ career platform. Those are later phases.
 - Secondary tracks: `cloud_infra`, `sales_technical`, `consulting`, `extras`
 - Wants alerts where both career fit and likely networking leverage matter
 
-## Tier Model
+## Target Model
 
-### Tier 1: Curated 25
+### Curated Top-50
 
-These companies get the highest-trust alert path and the strongest effort on
-speed, source quality, and filtering:
+The monitored universe is now a user-curated top-50 list built around FANG+,
+AI labs, quant firms, data infra, and high-upside applied ML companies. The
+registry is the only alertable company universe.
 
-1. Amazon
-2. Microsoft
-3. Google
-4. Apple
-5. Meta
-6. NVIDIA
-7. Databricks
-8. Palantir
-9. Cloudflare
-10. Datadog
-11. Shopify
-12. OpenAI
-13. Anthropic
-14. Cohere
-15. Stripe
-16. Ramp
-17. Capital One
-18. JPMorgan Chase
-19. Goldman Sachs
-20. Jane Street
-21. Citadel
-22. Two Sigma
-23. D. E. Shaw
-24. Netflix
-25. SpaceX
-
-This list is chosen using a hybrid heuristic:
-
-- strong career fit for Ruthwik
-- public UIUC-friendly recruiting/alumni signals
-- high internship/new-grad relevance
-- feasible direct-source monitoring
-
-### Tier 2: Extended Target Universe
-
-Broader Fortune 500, big-tech, fintech, quant, cloud, AI, and consulting
-coverage. Tier 2 is important, but it must not lower tier-1 quality.
-
-### Tier 3: Discovery
-
-Aggregators, GitHub repos, and community sources used for backfill or future
-promotion into tier 1 or tier 2. These do not define the core “post ASAP”
-promise for tier 1.
+Some companies in the registry do not yet have direct adapters. Those
+companies remain intentionally silent until a company-controlled source is
+added. The system no longer falls back to GitHub, aggregators, Reddit, HN, or
+other indirect discovery paths for alert generation.
 
 ## Source Selection Rule
 
@@ -86,30 +48,27 @@ Preferred order:
 
 1. Direct ATS/API endpoint
 2. Direct company careers page or company-controlled JSON feed
-3. High-quality fallback source
-4. Aggregator or GitHub/community discovery source
 
-Important: ATS is not always better than the careers page. The source of truth
-for a company is whichever direct company-controlled source proves to expose the
-role fastest and most reliably in practice.
+Important: only direct company-controlled sources may alert. If a company is in
+the curated registry but has no supported direct adapter yet, it stays silent.
 
 ## Qualification Rules
 
 A role should alert only if all of the following are true:
 
-- company belongs to an enabled target tier
+- company belongs to the curated top-50 registry
 - title/description indicate a bachelor-relevant role
 - posting matches one of Ruthwik’s target tracks
 - posting is not excluded by advanced-degree or seniority rules
+- posting has a trustworthy `posted_at` timestamp no older than 72 hours
+- posting explicitly indicates `Summer 2026`, `Fall 2026`, or `Spring 2026`
+- seasonal location rules are satisfied
 
 ### Included role signals
 
 - intern
 - internship
-- new grad
-- early career
-- entry level
-- recent graduate
+- part-time
 - seasonal
 - contract
 - temporary
@@ -117,15 +76,15 @@ A role should alert only if all of the following are true:
 ### Excluded role signals
 
 - co-op
-- apprenticeship programs that require leaving school full-time
-- PhD/MS/doctoral required roles
+- new grad / recent graduate roles without internship-style scope
+- PhD / master's-only / doctoral required roles
 - senior/staff/principal/lead/manager/director roles
 - experienced-hire roles that clearly expect beyond entry-level experience
 
-Interpretation rule:
+Season rules:
 
-`bachelor-relevant` means appropriate for a student currently pursuing a B.S.
-or a very recent graduate from that same pipeline.
+- `Summer 2026` roles must be in the US
+- `Fall 2026` and `Spring 2026` roles must be remote
 
 ## Alert Contract
 
@@ -204,7 +163,8 @@ Each stored posting should preserve:
 V1 is successful when:
 
 - tier-1 companies are explicitly represented in config
-- tier-1 alerts prefer direct company-controlled sources
+- direct-source companies are explicitly represented in config
+- alerts use only direct company-controlled sources
 - non-bachelor and non-student-relevant roles are filtered out
 - Discord alerts contain honest timestamps and concise key skills
 - the system can be verified end to end with live `/health`, `/feed`, and
@@ -216,9 +176,10 @@ V1 is successful when:
 - broad Fortune 500 completeness
 - fully automatic referral discovery
 - full Vault enrichment automation
-- social/news/community intelligence as a primary alert path
+- social/news/community intelligence as an alert path
 
 ## Related Detailed Docs
 
 - [Detailed v1 spec](./superpowers/specs/2026-04-14-jojo-alerts-v1-design.md)
-- [Implementation plan](./superpowers/plans/2026-04-14-jojo-alerts-v1-implementation.md)
+- [Top-50 direct-seasonal spec](./superpowers/specs/2026-04-15-top50-direct-seasonal-alerts-design.md)
+- [Top-50 implementation plan](./superpowers/plans/2026-04-15-top50-direct-seasonal-alerts-implementation.md)
