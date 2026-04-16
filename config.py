@@ -85,10 +85,9 @@ TRACK_KEYWORDS: dict[str, list[str]] = {
     ],
 }
 
-# ── Curated top-50 company list ────────────────────────────────────────
-# The registry reflects the user's ranked target universe for direct-careers
-# monitoring. Some entries are not yet adapter-backed and remain intentionally
-# silent until a direct source is added.
+# ── Curated top-60 company list ────────────────────────────────────────
+# This registry mirrors ``top-companies.md`` exactly. Companies only receive a
+# direct-source preference once we have a live, working careers endpoint.
 TIER1_COMPANIES: list[dict[str, str]] = [
     {"slug": "janestreet", "name": "Jane Street"},
     {"slug": "hudsonrivertrading", "name": "Hudson River Trading"},
@@ -110,36 +109,44 @@ TIER1_COMPANIES: list[dict[str, str]] = [
     {"slug": "stripe", "name": "Stripe"},
     {"slug": "perplexity", "name": "Perplexity"},
     {"slug": "xai", "name": "xAI"},
-    {"slug": "scaleai", "name": "Scale AI"},
+    {"slug": "scale-ai", "name": "Scale AI"},
     {"slug": "cohere", "name": "Cohere"},
     {"slug": "waymo", "name": "Waymo"},
     {"slug": "tesla", "name": "Tesla"},
     {"slug": "mistral", "name": "Mistral AI"},
     {"slug": "linkedin", "name": "LinkedIn"},
-    {"slug": "intuit", "name": "Intuit"},
     {"slug": "snap", "name": "Snap"},
-    {"slug": "palantir", "name": "Palantir"},
     {"slug": "uber", "name": "Uber"},
     {"slug": "airbnb", "name": "Airbnb"},
     {"slug": "doordash", "name": "DoorDash"},
+    {"slug": "lyft", "name": "Lyft"},
     {"slug": "spotify", "name": "Spotify"},
+    {"slug": "intuit", "name": "Intuit"},
+    {"slug": "palantir", "name": "Palantir"},
     {"slug": "salesforce", "name": "Salesforce"},
     {"slug": "twosigma", "name": "Two Sigma"},
     {"slug": "jumptrading", "name": "Jump Trading"},
     {"slug": "drw", "name": "DRW"},
-    {"slug": "akuna", "name": "Akuna Capital"},
+    {"slug": "akunacapital", "name": "Akuna Capital"},
     {"slug": "fiverings", "name": "Five Rings"},
     {"slug": "millennium", "name": "Millennium"},
-    {"slug": "point72", "name": "Point72 Cubist"},
+    {"slug": "point72", "name": "Point72"},
     {"slug": "sig", "name": "SIG"},
     {"slug": "confluent", "name": "Confluent"},
     {"slug": "mongodb", "name": "MongoDB"},
     {"slug": "elastic", "name": "Elastic"},
     {"slug": "dbtlabs", "name": "dbt Labs"},
     {"slug": "fivetran", "name": "Fivetran"},
-    {"slug": "anyscale", "name": "Anyscale"},
-    {"slug": "wandb", "name": "Weights & Biases"},
-    {"slug": "bloomberg", "name": "Bloomberg"},
+    {"slug": "datadog", "name": "Datadog"},
+    {"slug": "pinecone", "name": "Pinecone"},
+    {"slug": "adobe", "name": "Adobe"},
+    {"slug": "pinterest", "name": "Pinterest"},
+    {"slug": "cloudflare", "name": "Cloudflare"},
+    {"slug": "grammarly", "name": "Grammarly"},
+    {"slug": "togetherai", "name": "Together AI"},
+    {"slug": "netflix", "name": "Netflix"},
+    {"slug": "robinhood", "name": "Robinhood"},
+    {"slug": "discord", "name": "Discord"},
 ]
 
 TARGET_COMPANY_SLUGS: set[str] = {company["slug"] for company in TIER1_COMPANIES}
@@ -149,41 +156,71 @@ TARGET_COMPANY_SLUGS: set[str] = {company["slug"] for company in TIER1_COMPANIES
 TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
     "amazon": {"preferred_source": "amazon", "source_type": "direct"},
     "apple": {"preferred_source": "apple", "source_type": "direct"},
-    "openai": {"preferred_source": "ashby", "source_type": "direct"},
-    "anthropic": {"preferred_source": "ashby", "source_type": "direct"},
-    "cohere": {"preferred_source": "ashby", "source_type": "direct"},
-    "mistral": {"preferred_source": "ashby", "source_type": "direct"},
-    "databricks": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "palantir": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "citadel": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "janestreet": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "twosigma": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "deshaw": {"preferred_source": "greenhouse", "source_type": "direct"},
-    "scaleai": {"preferred_source": "lever", "source_type": "direct"},
+    "google": {"preferred_source": "google", "source_type": "direct"},
     "nvidia": {"preferred_source": "workday", "source_type": "direct"},
-    "tesla": {"preferred_source": "workday", "source_type": "direct"},
+    "adobe": {"preferred_source": "workday", "source_type": "direct"},
+    "openai": {"preferred_source": "ashby", "source_type": "direct"},
+    "cohere": {"preferred_source": "ashby", "source_type": "direct"},
+    "pinecone": {"preferred_source": "ashby", "source_type": "direct"},
+    "elastic": {"preferred_source": "ashby", "source_type": "direct"},
+    "confluent": {"preferred_source": "ashby", "source_type": "direct"},
+    "anthropic": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "databricks": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "janestreet": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "stripe": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "xai": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "waymo": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "linkedin": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "mongodb": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "fivetran": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "datadog": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "pinterest": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "cloudflare": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "togetherai": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "robinhood": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "discord": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "imc": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "optiver": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "akunacapital": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "jumptrading": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "point72": {"preferred_source": "greenhouse", "source_type": "direct"},
 }
 
 # ── Company board sources ──────────────────────────────────────────────
 GREENHOUSE_COMPANIES: list[dict[str, str]] = [
-    {"slug": "citadel", "name": "Citadel"},
+    {"slug": "anthropic", "name": "Anthropic"},
     {"slug": "janestreet", "name": "Jane Street"},
-    {"slug": "twosigma", "name": "Two Sigma"},
-    {"slug": "deshaw", "name": "D.E. Shaw"},
-    {"slug": "palantir", "name": "Palantir"},
+    {"slug": "stripe", "name": "Stripe"},
+    {"slug": "xai", "name": "xAI"},
     {"slug": "databricks", "name": "Databricks"},
+    {"slug": "waymo", "name": "Waymo"},
+    {"slug": "linkedin", "name": "LinkedIn"},
+    {"slug": "mongodb", "name": "MongoDB"},
+    {"slug": "fivetran", "name": "Fivetran"},
+    {"slug": "datadog", "name": "Datadog"},
+    {"slug": "pinterest", "name": "Pinterest"},
+    {"slug": "cloudflare", "name": "Cloudflare"},
+    {"slug": "togetherai", "name": "Together AI"},
+    {"slug": "robinhood", "name": "Robinhood"},
+    {"slug": "discord", "name": "Discord"},
+    {"slug": "imc", "name": "IMC"},
+    {"slug": "optiver", "name": "Optiver"},
+    {"slug": "akunacapital", "name": "Akuna Capital"},
+    {"slug": "jumptrading", "name": "Jump Trading"},
+    {"slug": "point72", "name": "Point72"},
 ]
 
 ASHBY_COMPANIES: list[dict[str, str]] = [
-    {"slug": "anthropic", "name": "Anthropic"},
     {"slug": "openai", "name": "OpenAI"},
     {"slug": "cohere", "name": "Cohere"},
-    {"slug": "mistral", "name": "Mistral AI"},
+    {"slug": "pinecone", "name": "Pinecone"},
+    {"slug": "elastic", "name": "Elastic"},
+    {"slug": "confluent", "name": "Confluent"},
 ]
 
-LEVER_COMPANIES: list[dict[str, str]] = [
-    {"slug": "scaleai", "name": "Scale AI"},
-]
+# The prompt's Lever slugs 404'd during live verification, so these stay empty
+# until a current, working direct endpoint is confirmed.
+LEVER_COMPANIES: list[dict[str, str]] = []
 
 # ── Reddit sources ─────────────────────────────────────────────────────
 SUBREDDITS: list[str] = [
@@ -208,6 +245,7 @@ DIRECT_ALERT_SOURCES: set[str] = {
     "amazon",
     "apple",
     "workday",
+    "google",
 }
 
 # ── Intern / entry-level title patterns for bachelor-level intent ─────
@@ -369,6 +407,7 @@ POLL_INTERVAL_MINUTES: dict[str, int] = {
     "greenhouse": _int_env("POLL_GREENHOUSE_MINUTES", 15),
     "ashby": _int_env("POLL_ASHBY_MINUTES", 15),
     "lever": _int_env("POLL_LEVER_MINUTES", 15),
+    "google": _int_env("POLL_GOOGLE_MINUTES", 30),
     "amazon": _int_env("POLL_AMAZON_MINUTES", 30),
     "apple": _int_env("POLL_APPLE_MINUTES", 30),
     "workday": _int_env("POLL_WORKDAY_MINUTES", 60),

@@ -18,6 +18,7 @@ from sources import (
     amazon,
     apple,
     ashby,
+    google,
     greenhouse,
     lever,
     workday,
@@ -149,6 +150,11 @@ async def poll_amazon_jobs() -> None:
     await process_postings(postings, "amazon")
 
 
+async def poll_google_jobs() -> None:
+    postings = await google.poll_all()
+    await process_postings(postings, "google")
+
+
 async def poll_apple_jobs() -> None:
     postings = await apple.poll_all()
     await process_postings(postings, "apple")
@@ -190,6 +196,13 @@ async def _async_main() -> None:
         next_run_time=None,
     )
     scheduler.add_job(
+        poll_google_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["google"],
+        id="google",
+        next_run_time=None,
+    )
+    scheduler.add_job(
         poll_amazon_jobs,
         "interval",
         minutes=POLL_INTERVAL_MINUTES["amazon"],
@@ -217,7 +230,7 @@ async def _async_main() -> None:
     # Run initial poll — individual failures are logged, not raised
     results = await asyncio.gather(
         poll_greenhouse(), poll_ashby(), poll_lever(),
-        poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
+        poll_google_jobs(), poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
         return_exceptions=True,
     )
     for r in results:

@@ -21,13 +21,7 @@ logger = logging.getLogger(__name__)
 
 WORKDAY_COMPANIES: list[dict[str, str]] = [
     {"slug": "nvidia", "host": "nvidia.wd5.myworkdayjobs.com", "path": "/en-US/NVIDIAExternalCareerSite", "name": "Nvidia"},
-    {"slug": "tesla", "host": "tesla.wd5.myworkdayjobs.com", "path": "/en-US/TeslaExternalCareerSite", "name": "Tesla"},
-    {"slug": "jpmorgan", "host": "jpmc.fa.oraclecloud.com", "path": "/hcmUI/CandidateExperience/en/sites/CX_1001/requisitions", "name": "JPMorgan"},
-    {"slug": "goldmansachs", "host": "higher.gs.com", "path": "/roles/internships", "name": "Goldman Sachs"},
-    {"slug": "deloitte", "host": "apply.deloitte.com", "path": "/careers/SearchJobs/intern", "name": "Deloitte"},
-    {"slug": "mckinsey", "host": "www.mckinsey.com", "path": "/careers/search-jobs?query=intern", "name": "McKinsey"},
-    {"slug": "bcg", "host": "careers.bcg.com", "path": "/en_US/landing-pages/internship-programs", "name": "BCG"},
-    {"slug": "bain", "host": "www.bain.com", "path": "/careers/find-a-role/internship", "name": "Bain"},
+    {"slug": "adobe", "host": "adobe.wd5.myworkdayjobs.com", "path": "/en-US/external_experienced", "name": "Adobe"},
 ]
 
 # Regex to extract JSON-LD blocks from HTML
