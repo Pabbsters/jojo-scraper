@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 WORKDAY_COMPANIES: list[dict[str, str]] = [
     {"slug": "nvidia", "host": "nvidia.wd5.myworkdayjobs.com", "path": "/en-US/NVIDIAExternalCareerSite", "name": "Nvidia"},
     {"slug": "adobe", "host": "adobe.wd5.myworkdayjobs.com", "path": "/en-US/external_experienced", "name": "Adobe"},
+    {"slug": "salesforce", "host": "salesforce.wd12.myworkdayjobs.com", "path": "/en-US/External_Career_Site", "name": "Salesforce"},
 ]
 
 # Regex to extract JSON-LD blocks from HTML

@@ -15,12 +15,16 @@ from discord_alert import send_alert
 from feed import start_feed_server
 from matching import classify_posting
 from sources import (
+    airbnb,
     amazon,
     apple,
     ashby,
     google,
     greenhouse,
     lever,
+    netflix,
+    smartrecruiters,
+    talentbrew,
     workday,
 )
 from targeting import should_accept_posting
@@ -155,6 +159,16 @@ async def poll_google_jobs() -> None:
     await process_postings(postings, "google")
 
 
+async def poll_talentbrew_jobs() -> None:
+    postings = await talentbrew.poll_all()
+    await process_postings(postings, "talentbrew")
+
+
+async def poll_airbnb_jobs() -> None:
+    postings = await airbnb.poll_all()
+    await process_postings(postings, "airbnb")
+
+
 async def poll_apple_jobs() -> None:
     postings = await apple.poll_all()
     await process_postings(postings, "apple")
@@ -163,6 +177,16 @@ async def poll_apple_jobs() -> None:
 async def poll_workday_feeds() -> None:
     postings = await workday.poll_all()
     await process_postings(postings, "workday")
+
+
+async def poll_smartrecruiters_jobs() -> None:
+    postings = await smartrecruiters.poll_all()
+    await process_postings(postings, "smartrecruiters")
+
+
+async def poll_netflix_jobs() -> None:
+    postings = await netflix.poll_all()
+    await process_postings(postings, "netflix")
 
 
 async def _async_main() -> None:
@@ -203,6 +227,20 @@ async def _async_main() -> None:
         next_run_time=None,
     )
     scheduler.add_job(
+        poll_talentbrew_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["talentbrew"],
+        id="talentbrew",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_airbnb_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["airbnb"],
+        id="airbnb",
+        next_run_time=None,
+    )
+    scheduler.add_job(
         poll_amazon_jobs,
         "interval",
         minutes=POLL_INTERVAL_MINUTES["amazon"],
@@ -223,6 +261,20 @@ async def _async_main() -> None:
         id="workday",
         next_run_time=None,
     )
+    scheduler.add_job(
+        poll_smartrecruiters_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["smartrecruiters"],
+        id="smartrecruiters",
+        next_run_time=None,
+    )
+    scheduler.add_job(
+        poll_netflix_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["netflix"],
+        id="netflix",
+        next_run_time=None,
+    )
 
     scheduler.start()
     logger.info("Scheduler started -- direct careers sources armed")
@@ -230,7 +282,9 @@ async def _async_main() -> None:
     # Run initial poll — individual failures are logged, not raised
     results = await asyncio.gather(
         poll_greenhouse(), poll_ashby(), poll_lever(),
-        poll_google_jobs(), poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
+        poll_google_jobs(), poll_talentbrew_jobs(), poll_airbnb_jobs(),
+        poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
+        poll_smartrecruiters_jobs(), poll_netflix_jobs(),
         return_exceptions=True,
     )
     for r in results:

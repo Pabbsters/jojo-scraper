@@ -57,12 +57,17 @@ def parse_greenhouse_jobs(
     return results
 
 
-async def fetch_jobs(slug: str, name: str) -> list[dict]:
+async def fetch_jobs(
+    company_slug: str,
+    name: str,
+    *,
+    board_slug: str | None = None,
+) -> list[dict]:
     """Fetch and parse jobs from Greenhouse for one company."""
     async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(GREENHOUSE_API.format(slug=slug))
+        resp = await client.get(GREENHOUSE_API.format(slug=board_slug or company_slug))
         resp.raise_for_status()
-        return parse_greenhouse_jobs(slug, name, resp.json())
+        return parse_greenhouse_jobs(company_slug, name, resp.json())
 
 
 async def poll_all() -> list[dict]:
@@ -70,7 +75,11 @@ async def poll_all() -> list[dict]:
     results: list[dict] = []
     for company in GREENHOUSE_COMPANIES:
         try:
-            jobs = await fetch_jobs(company["slug"], company["name"])
+            jobs = await fetch_jobs(
+                company["slug"],
+                company["name"],
+                board_slug=company.get("board_slug"),
+            )
             results.extend(jobs)
         except Exception:
             pass  # Log in production, skip failed companies

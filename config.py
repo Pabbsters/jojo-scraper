@@ -159,19 +159,26 @@ TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
     "google": {"preferred_source": "google", "source_type": "direct"},
     "nvidia": {"preferred_source": "workday", "source_type": "direct"},
     "adobe": {"preferred_source": "workday", "source_type": "direct"},
+    "intuit": {"preferred_source": "talentbrew", "source_type": "direct"},
+    "airbnb": {"preferred_source": "airbnb", "source_type": "direct"},
     "openai": {"preferred_source": "ashby", "source_type": "direct"},
     "cohere": {"preferred_source": "ashby", "source_type": "direct"},
     "pinecone": {"preferred_source": "ashby", "source_type": "direct"},
     "elastic": {"preferred_source": "ashby", "source_type": "direct"},
     "confluent": {"preferred_source": "ashby", "source_type": "direct"},
+    "perplexity": {"preferred_source": "ashby", "source_type": "direct"},
+    "snowflake": {"preferred_source": "ashby", "source_type": "direct"},
     "anthropic": {"preferred_source": "greenhouse", "source_type": "direct"},
     "databricks": {"preferred_source": "greenhouse", "source_type": "direct"},
     "janestreet": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "hudsonrivertrading": {"preferred_source": "greenhouse", "source_type": "direct"},
     "stripe": {"preferred_source": "greenhouse", "source_type": "direct"},
     "xai": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "scale-ai": {"preferred_source": "greenhouse", "source_type": "direct"},
     "waymo": {"preferred_source": "greenhouse", "source_type": "direct"},
     "linkedin": {"preferred_source": "greenhouse", "source_type": "direct"},
     "mongodb": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "dbtlabs": {"preferred_source": "greenhouse", "source_type": "direct"},
     "fivetran": {"preferred_source": "greenhouse", "source_type": "direct"},
     "datadog": {"preferred_source": "greenhouse", "source_type": "direct"},
     "pinterest": {"preferred_source": "greenhouse", "source_type": "direct"},
@@ -183,19 +190,34 @@ TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
     "optiver": {"preferred_source": "greenhouse", "source_type": "direct"},
     "akunacapital": {"preferred_source": "greenhouse", "source_type": "direct"},
     "jumptrading": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "drw": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "fiverings": {"preferred_source": "greenhouse", "source_type": "direct"},
     "point72": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "palantir": {"preferred_source": "lever", "source_type": "direct"},
+    "mistral": {"preferred_source": "lever", "source_type": "direct"},
+    "lyft": {"preferred_source": "greenhouse", "source_type": "direct"},
+    "snap": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "spotify": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "grammarly": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "millennium": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "netflix": {"preferred_source": "netflix", "source_type": "direct"},
+    "salesforce": {"preferred_source": "workday", "source_type": "direct"},
 }
 
 # ── Company board sources ──────────────────────────────────────────────
 GREENHOUSE_COMPANIES: list[dict[str, str]] = [
     {"slug": "anthropic", "name": "Anthropic"},
     {"slug": "janestreet", "name": "Jane Street"},
+    {"slug": "hudsonrivertrading", "name": "Hudson River Trading", "board_slug": "wehrtyou"},
     {"slug": "stripe", "name": "Stripe"},
     {"slug": "xai", "name": "xAI"},
     {"slug": "databricks", "name": "Databricks"},
+    {"slug": "scale-ai", "name": "Scale AI", "board_slug": "scaleai"},
     {"slug": "waymo", "name": "Waymo"},
     {"slug": "linkedin", "name": "LinkedIn"},
+    {"slug": "lyft", "name": "Lyft"},
     {"slug": "mongodb", "name": "MongoDB"},
+    {"slug": "dbtlabs", "name": "dbt Labs", "board_slug": "dbtlabsinc"},
     {"slug": "fivetran", "name": "Fivetran"},
     {"slug": "datadog", "name": "Datadog"},
     {"slug": "pinterest", "name": "Pinterest"},
@@ -207,6 +229,8 @@ GREENHOUSE_COMPANIES: list[dict[str, str]] = [
     {"slug": "optiver", "name": "Optiver"},
     {"slug": "akunacapital", "name": "Akuna Capital"},
     {"slug": "jumptrading", "name": "Jump Trading"},
+    {"slug": "drw", "name": "DRW", "board_slug": "drweng"},
+    {"slug": "fiverings", "name": "Five Rings", "board_slug": "fiveringsllc"},
     {"slug": "point72", "name": "Point72"},
 ]
 
@@ -216,11 +240,14 @@ ASHBY_COMPANIES: list[dict[str, str]] = [
     {"slug": "pinecone", "name": "Pinecone"},
     {"slug": "elastic", "name": "Elastic"},
     {"slug": "confluent", "name": "Confluent"},
+    {"slug": "perplexity", "name": "Perplexity"},
+    {"slug": "snowflake", "name": "Snowflake"},
 ]
 
-# The prompt's Lever slugs 404'd during live verification, so these stay empty
-# until a current, working direct endpoint is confirmed.
-LEVER_COMPANIES: list[dict[str, str]] = []
+LEVER_COMPANIES: list[dict[str, str]] = [
+    {"slug": "palantir", "name": "Palantir"},
+    {"slug": "mistral", "name": "Mistral AI"},
+]
 
 # ── Reddit sources ─────────────────────────────────────────────────────
 SUBREDDITS: list[str] = [
@@ -246,7 +273,37 @@ DIRECT_ALERT_SOURCES: set[str] = {
     "apple",
     "workday",
     "google",
+    "talentbrew",
+    "airbnb",
+    "smartrecruiters",
+    "netflix",
 }
+
+
+def build_coverage_report() -> dict[str, object]:
+    """Return direct-source coverage status for the tier-1 registry."""
+    registry = [company["slug"] for company in TIER1_COMPANIES]
+    covered = [
+        slug for slug in registry
+        if slug in TIER1_SOURCE_PREFERENCES
+    ]
+    uncovered = [
+        slug for slug in registry
+        if slug not in TIER1_SOURCE_PREFERENCES
+    ]
+    preferred_source_by_company = {
+        slug: TIER1_SOURCE_PREFERENCES[slug]["preferred_source"]
+        for slug in covered
+    }
+    source_family_counts: dict[str, int] = {}
+    for source in preferred_source_by_company.values():
+        source_family_counts[source] = source_family_counts.get(source, 0) + 1
+    return {
+        "covered_companies": covered,
+        "uncovered_companies": uncovered,
+        "preferred_source_by_company": preferred_source_by_company,
+        "source_family_counts": source_family_counts,
+    }
 
 # ── Intern / entry-level title patterns for bachelor-level intent ─────
 INTERN_TITLE_PATTERNS: list[str] = [
@@ -411,4 +468,8 @@ POLL_INTERVAL_MINUTES: dict[str, int] = {
     "amazon": _int_env("POLL_AMAZON_MINUTES", 30),
     "apple": _int_env("POLL_APPLE_MINUTES", 30),
     "workday": _int_env("POLL_WORKDAY_MINUTES", 60),
+    "talentbrew": _int_env("POLL_TALENTBREW_MINUTES", 30),
+    "airbnb": _int_env("POLL_AIRBNB_MINUTES", 30),
+    "smartrecruiters": _int_env("POLL_SMARTRECRUITERS_MINUTES", 30),
+    "netflix": _int_env("POLL_NETFLIX_MINUTES", 30),
 }

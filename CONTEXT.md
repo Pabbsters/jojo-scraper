@@ -7,11 +7,11 @@ This is the standalone deploy repo for the jojo internship scraper. It is a copy
 
 | Key | Value |
 |-----|-------|
-| URL | `http://159.69.150.218` |
-| Health | `GET http://159.69.150.218/health` |
-| Feed | `GET http://159.69.150.218/feed?since=<unix_ts>` |
-| Provider | Hetzner (via ComputeEdge MCP) |
-| Deployment ID | `ce-hetzner-815715f4` |
+| URL | `http://159.69.150.218:8080` |
+| Health | `GET http://159.69.150.218:8080/health` |
+| Feed | `GET http://159.69.150.218:8080/feed?since=<unix_ts>` |
+| Provider | Hetzner (CX23, server ID 127007627) |
+| Deployment | systemd + venv, Ubuntu 24.04 |
 | Cost | $3.49/mo |
 
 ## Repos
@@ -45,34 +45,34 @@ sources/         — one poller per job board
 
 ## Current Status (verified 2026-04-14)
 
-- [x] 502 resolved and `/health` returns `{"status": "ok"}`
-- [x] `/feed` returns live JSON postings from the deployed service
-- [x] Discord delivery path previously confirmed by user
-- [ ] Wire `SCRAPER_FEED_URL=http://159.69.150.218` into NanoClaw tasks (see `nanoclaw/scraper/nanoclaw-tasks/`)
-- [x] Task 16: Daily AI enrichment NanoClaw task registered
-- [x] Task 17: Weekly newsletter NanoClaw task registered
-- [x] Task 18: Weekly knowledge base update NanoClaw task registered
-- [ ] Task 19: Extended end-to-end checks outside local pytest remain to be confirmed
-- [ ] Task 20: Final config/docs pass
+- [x] `/health` returns `{"status": "ok"}` at port 8080
+- [x] `/feed` responds live — 0 postings until a matching fresh seasonal posting arrives
+- [x] Discord webhook verified — test embed delivered 2026-04-16
+- [x] DISCORD_WEBHOOK_URL injected via `/opt/jojo/.env` on server
+- [x] NanoClaw task scripts updated to use port 8080
+- [x] Enrichment prompt updated for direct-only top-50 seasonal policy
+- [ ] NanoClaw scheduled tasks not yet re-registered (DB was empty); re-run setup-tasks.sh once NanoClaw is running
+- [ ] Port 80 not open — all NanoClaw URLs must use :8080
 
-## Deployment (via ComputeEdge MCP in Claude Code)
+## Deployment (Hetzner API + cloud-init)
 
-```python
-# Save credentials once
-mcp__computeedge__set_credentials(provider="hetzner", token="<HETZNER_TOKEN>")
-mcp__computeedge__set_credentials(key="DISCORD_WEBHOOK_URL", value="<WEBHOOK_URL>")
-mcp__computeedge__set_credentials(key="DB_PATH", value="/data/postings.db")
+Server ID: `127007627`, IP: `159.69.150.218`, type: CX23, Ubuntu 24.04
 
-# Deploy / redeploy
-mcp__computeedge__deploy(
-    provider_token="<HETZNER_TOKEN>",
-    repo_path="https://github.com/Pabbsters/jojo-scraper",
-    provider="hetzner"
-)
+SSH access: `ssh root@159.69.150.218` (uses `~/.ssh/id_ed25519`)
 
-# Monitor
-mcp__computeedge__monitor(deployment_id="ce-hetzner-dbe06520")
+Service management:
+```bash
+ssh root@159.69.150.218 "systemctl status jojo"
+ssh root@159.69.150.218 "journalctl -u jojo -f"
+ssh root@159.69.150.218 "systemctl restart jojo"
 ```
+
+To redeploy latest code:
+```bash
+ssh root@159.69.150.218 "cd /opt/jojo/app && git pull && systemctl restart jojo"
+```
+
+Credentials stored in `~/.config/jojo/secrets.env` (never commit).
 
 ## Full Plan
 
