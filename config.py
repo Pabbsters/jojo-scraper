@@ -202,6 +202,9 @@ TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
     "millennium": {"preferred_source": "smartrecruiters", "source_type": "direct"},
     "netflix": {"preferred_source": "netflix", "source_type": "direct"},
     "salesforce": {"preferred_source": "workday", "source_type": "direct"},
+    "uber": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "doordash": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "tesla": {"preferred_source": "workday_api", "source_type": "direct"},
 }
 
 # ── Company board sources ──────────────────────────────────────────────
@@ -272,6 +275,7 @@ DIRECT_ALERT_SOURCES: set[str] = {
     "amazon",
     "apple",
     "workday",
+    "workday_api",
     "google",
     "talentbrew",
     "airbnb",
@@ -472,4 +476,5 @@ POLL_INTERVAL_MINUTES: dict[str, int] = {
     "airbnb": _int_env("POLL_AIRBNB_MINUTES", 30),
     "smartrecruiters": _int_env("POLL_SMARTRECRUITERS_MINUTES", 30),
     "netflix": _int_env("POLL_NETFLIX_MINUTES", 30),
+    "workday_api": _int_env("POLL_WORKDAY_API_MINUTES", 60),
 }

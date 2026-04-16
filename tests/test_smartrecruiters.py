@@ -131,6 +131,8 @@ class TestSmartrecruitersCompanies:
         assert "spotify" in slugs
         assert "grammarly" in slugs
         assert "millennium" in slugs
+        assert "uber" in slugs
+        assert "doordash" in slugs
 
     def test_slugs_are_unique(self) -> None:
         slugs = [c["slug"] for c in SMARTRECRUITERS_COMPANIES]

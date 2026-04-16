@@ -26,6 +26,7 @@ from sources import (
     smartrecruiters,
     talentbrew,
     workday,
+    workday_api,
 )
 from targeting import should_accept_posting
 
@@ -189,6 +190,11 @@ async def poll_netflix_jobs() -> None:
     await process_postings(postings, "netflix")
 
 
+async def poll_workday_api_jobs() -> None:
+    postings = await workday_api.poll_all()
+    await process_postings(postings, "workday_api")
+
+
 async def _async_main() -> None:
     logger.info("Starting jojo-scraper")
 
@@ -275,6 +281,13 @@ async def _async_main() -> None:
         id="netflix",
         next_run_time=None,
     )
+    scheduler.add_job(
+        poll_workday_api_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["workday_api"],
+        id="workday_api",
+        next_run_time=None,
+    )
 
     scheduler.start()
     logger.info("Scheduler started -- direct careers sources armed")
@@ -284,7 +297,7 @@ async def _async_main() -> None:
         poll_greenhouse(), poll_ashby(), poll_lever(),
         poll_google_jobs(), poll_talentbrew_jobs(), poll_airbnb_jobs(),
         poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
-        poll_smartrecruiters_jobs(), poll_netflix_jobs(),
+        poll_smartrecruiters_jobs(), poll_netflix_jobs(), poll_workday_api_jobs(),
         return_exceptions=True,
     )
     for r in results:
