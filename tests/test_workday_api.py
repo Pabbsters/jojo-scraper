@@ -7,6 +7,7 @@ import pytest
 from sources.workday_api import (
     WORKDAY_API_COMPANIES,
     _extract_csrf,
+    fetch_jobs,
     is_intern_posting,
     parse_workday_api_jobs,
 )
@@ -126,3 +127,44 @@ class TestWorkdayApiCompanies:
     def test_tesla_present(self) -> None:
         slugs = {c["slug"] for c in WORKDAY_API_COMPANIES}
         assert "tesla" in slugs
+
+
+@pytest.mark.asyncio
+async def test_fetch_jobs_returns_empty_on_maintenance_page(monkeypatch) -> None:
+    import httpx
+
+    class MockResponse:
+        def __init__(self, *, text: str = "", headers: httpx.Headers | None = None, status_code: int = 200):
+            self.text = text
+            self.headers = headers or httpx.Headers({})
+            self.status_code = status_code
+
+        def raise_for_status(self) -> None:
+            if self.status_code >= 400:
+                raise httpx.HTTPStatusError(
+                    f"status {self.status_code}",
+                    request=httpx.Request("GET", "https://example.com"),
+                    response=httpx.Response(self.status_code, request=httpx.Request("GET", "https://example.com")),
+                )
+
+        def json(self) -> dict:
+            return {}
+
+    class MockClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def get(self, url, headers=None):
+            return MockResponse(
+                text='window.location.href = "https://community.workday.com/maintenance-page"',
+            )
+
+        async def post(self, url, json=None, headers=None):
+            raise AssertionError("POST should not run when the careers page is in maintenance mode")
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda *args, **kwargs: MockClient())
+    jobs = await fetch_jobs("tesla", "Tesla", "tesla.wd1.myworkdayjobs.com", "tesla", "teslamotors")
+    assert jobs == []

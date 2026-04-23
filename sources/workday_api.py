@@ -37,6 +37,10 @@ WORKDAY_API_COMPANIES: list[dict[str, str]] = [
 ]
 
 _UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+_MAINTENANCE_MARKERS = (
+    "community.workday.com/maintenance-page",
+    "window.location.href = \"https://community.workday.com/maintenance-page\"",
+)
 
 
 def is_intern_posting(title: str) -> bool:
@@ -117,6 +121,8 @@ async def fetch_jobs(
         try:
             get_resp = await client.get(careers_url, headers=headers)
             csrf = _extract_csrf(get_resp.headers, get_resp.text)
+            if any(marker in get_resp.text for marker in _MAINTENANCE_MARKERS):
+                return []
         except Exception:
             csrf = None
 
@@ -138,6 +144,8 @@ async def fetch_jobs(
         }
 
         resp = await client.post(api_url, json=payload, headers=post_headers)
+        if resp.status_code == 422:
+            return []
         resp.raise_for_status()
         return parse_workday_api_jobs(slug, name, host, resp.json())
 

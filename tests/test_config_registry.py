@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import inspect
+
+import main
 from config import (
     ASHBY_COMPANIES,
     DIRECT_ALERT_SOURCES,
@@ -47,6 +50,8 @@ def test_coverage_report_matches_registry_and_sources() -> None:
 
     assert set(report["covered_companies"]) | set(report["uncovered_companies"]) == registry
     assert set(report["covered_companies"]) & set(report["uncovered_companies"]) == set()
+    assert set(report["covered_companies"]) == registry
+    assert report["uncovered_companies"] == []
     for source in report["preferred_source_by_company"].values():
         assert source in DIRECT_ALERT_SOURCES
 
@@ -61,3 +66,17 @@ def test_hidden_board_slug_overrides_are_present_for_verified_boards() -> None:
     assert greenhouse_overrides["dbtlabs"] == "dbtlabsinc"
     assert greenhouse_overrides["drw"] == "drweng"
     assert greenhouse_overrides["fiverings"] == "fiveringsllc"
+
+
+def test_every_registry_company_has_a_preferred_direct_source() -> None:
+    registry = {company["slug"] for company in TIER1_COMPANIES}
+    assert set(TIER1_SOURCE_PREFERENCES) == registry
+    for config in TIER1_SOURCE_PREFERENCES.values():
+        assert config["source_type"] == "direct"
+        assert config["preferred_source"] in DIRECT_ALERT_SOURCES
+
+
+def test_every_preferred_source_has_a_scheduler_job() -> None:
+    main_source = inspect.getsource(main)
+    for source in DIRECT_ALERT_SOURCES:
+        assert f'id="{source}"' in main_source

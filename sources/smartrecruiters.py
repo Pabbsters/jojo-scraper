@@ -17,6 +17,8 @@ SMARTRECRUITERS_COMPANIES: list[dict[str, str]] = [
     {"slug": "millennium", "company_id": "MillenniumManagement", "name": "Millennium"},
     {"slug": "uber", "company_id": "Uber", "name": "Uber"},
     {"slug": "doordash", "company_id": "DoorDash", "name": "DoorDash"},
+    {"slug": "citadel", "company_id": "Citadel", "name": "Citadel"},
+    {"slug": "twosigma", "company_id": "TwoSigma", "name": "Two Sigma"},
 ]
 
 

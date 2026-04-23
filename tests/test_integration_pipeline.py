@@ -313,3 +313,83 @@ def test_process_postings_rejects_non_internship_style_role(tmp_path, monkeypatc
     assert test_db.get_recent(limit=10) == []
     mock_send_alert.assert_not_awaited()
     test_db.close()
+
+
+def test_process_postings_accepts_winter_remote_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-130",
+        url="https://jobs.openai.com/careers/130?jobId=130",
+        title="Machine Learning Intern - Winter 2026",
+        description="Remote internship on model evaluation and search systems.",
+    )
+    posting["location"] = "Remote"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert len(test_db.get_recent(limit=10)) == 1
+    mock_send_alert.assert_awaited_once()
+    test_db.close()
+
+
+def test_process_postings_accepts_winter_us_in_person_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-131",
+        url="https://jobs.openai.com/careers/131?jobId=131",
+        title="Machine Learning Intern - Winter 2026",
+        description="Onsite internship building inference systems in the United States.",
+    )
+    posting["location"] = "Seattle, WA, United States"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert len(test_db.get_recent(limit=10)) == 1
+    mock_send_alert.assert_awaited_once()
+    test_db.close()
+
+
+def test_process_postings_rejects_winter_non_us_non_remote_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-132",
+        url="https://jobs.openai.com/careers/132?jobId=132",
+        title="AI Systems Intern - Winter 2026",
+        description="Onsite internship building inference systems.",
+    )
+    posting["location"] = "Toronto, Ontario, Canada"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()
+
+
+def test_process_postings_accepts_summer_2027_us_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-133",
+        url="https://jobs.openai.com/careers/133?jobId=133",
+        title="Machine Learning Intern - Summer 2027",
+        description="Onsite internship building search systems.",
+    )
+    posting["location"] = "New York, NY, United States"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert len(test_db.get_recent(limit=10)) == 1
+    mock_send_alert.assert_awaited_once()
+    test_db.close()
+
+
+def test_process_postings_rejects_summer_2027_non_us_role(tmp_path, monkeypatch) -> None:
+    posting = _tier1_posting(
+        posting_id="ash-134",
+        url="https://jobs.openai.com/careers/134?jobId=134",
+        title="Machine Learning Intern - Summer 2027",
+        description="Onsite internship building search systems.",
+    )
+    posting["location"] = "London, United Kingdom"
+    posting["posted_at"] = _recent_timestamp()
+    test_db, mock_send_alert = _run_process(posting, "ashby", tmp_path, monkeypatch)
+
+    assert test_db.get_recent(limit=10) == []
+    mock_send_alert.assert_not_awaited()
+    test_db.close()

@@ -23,6 +23,7 @@ from sources import (
     greenhouse,
     lever,
     netflix,
+    official_pages,
     smartrecruiters,
     talentbrew,
     workday,
@@ -195,6 +196,11 @@ async def poll_workday_api_jobs() -> None:
     await process_postings(postings, "workday_api")
 
 
+async def poll_official_pages_jobs() -> None:
+    postings = await official_pages.poll_all()
+    await process_postings(postings, "official_pages")
+
+
 async def _async_main() -> None:
     logger.info("Starting jojo-scraper")
 
@@ -288,6 +294,13 @@ async def _async_main() -> None:
         id="workday_api",
         next_run_time=None,
     )
+    scheduler.add_job(
+        poll_official_pages_jobs,
+        "interval",
+        minutes=POLL_INTERVAL_MINUTES["official_pages"],
+        id="official_pages",
+        next_run_time=None,
+    )
 
     scheduler.start()
     logger.info("Scheduler started -- direct careers sources armed")
@@ -298,6 +311,7 @@ async def _async_main() -> None:
         poll_google_jobs(), poll_talentbrew_jobs(), poll_airbnb_jobs(),
         poll_amazon_jobs(), poll_apple_jobs(), poll_workday_feeds(),
         poll_smartrecruiters_jobs(), poll_netflix_jobs(), poll_workday_api_jobs(),
+        poll_official_pages_jobs(),
         return_exceptions=True,
     )
     for r in results:

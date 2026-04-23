@@ -205,6 +205,13 @@ TIER1_SOURCE_PREFERENCES: dict[str, dict[str, str]] = {
     "uber": {"preferred_source": "smartrecruiters", "source_type": "direct"},
     "doordash": {"preferred_source": "smartrecruiters", "source_type": "direct"},
     "tesla": {"preferred_source": "workday_api", "source_type": "direct"},
+    "citadel": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "twosigma": {"preferred_source": "smartrecruiters", "source_type": "direct"},
+    "deshaw": {"preferred_source": "official_pages", "source_type": "direct"},
+    "sig": {"preferred_source": "official_pages", "source_type": "direct"},
+    "meta": {"preferred_source": "official_pages", "source_type": "direct"},
+    "microsoft": {"preferred_source": "official_pages", "source_type": "direct"},
+    "bytedance": {"preferred_source": "official_pages", "source_type": "direct"},
 }
 
 # ── Company board sources ──────────────────────────────────────────────
@@ -281,6 +288,7 @@ DIRECT_ALERT_SOURCES: set[str] = {
     "airbnb",
     "smartrecruiters",
     "netflix",
+    "official_pages",
 }
 
 
@@ -453,12 +461,22 @@ SEASON_PATTERNS: dict[str, list[str]] = {
         r"\bspring\s+2026\b",
         r"\b2026\s+spring\b",
     ],
+    "winter_2026": [
+        r"\bwinter\s+2026\b",
+        r"\b2026\s+winter\b",
+    ],
+    "summer_2027": [
+        r"\bsummer\s+2027\b",
+        r"\b2027\s+summer\b",
+    ],
 }
 
 SEASON_LOCATION_RULES: dict[str, str] = {
     "summer_2026": "us",
     "fall_2026": "remote",
     "spring_2026": "remote",
+    "winter_2026": "remote_or_us",
+    "summer_2027": "us",
 }
 
 MAX_POST_AGE_HOURS = 72
@@ -477,4 +495,5 @@ POLL_INTERVAL_MINUTES: dict[str, int] = {
     "smartrecruiters": _int_env("POLL_SMARTRECRUITERS_MINUTES", 30),
     "netflix": _int_env("POLL_NETFLIX_MINUTES", 30),
     "workday_api": _int_env("POLL_WORKDAY_API_MINUTES", 60),
+    "official_pages": _int_env("POLL_OFFICIAL_PAGES_MINUTES", 60),
 }

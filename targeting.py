@@ -133,6 +133,10 @@ def should_accept_posting(
         return False
     if location_rule == "us" and not _is_us(combined_text):
         return False
+    if location_rule == "remote_or_us" and not (
+        _is_remote(combined_text) or _is_us(combined_text)
+    ):
+        return False
 
     reference = now or datetime.now(UTC)
     if not _is_fresh(posting.get("posted_at"), reference):
